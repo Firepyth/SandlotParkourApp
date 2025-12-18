@@ -3,7 +3,7 @@ import express from 'express';
 import json from '../helpers/json.js';
 const router = express.Router();
 
-interface BulkCourse {
+interface CourseBulk {
     course_id: number;
     name: string;
     created: Date;
@@ -24,7 +24,7 @@ interface Course {
     fastest_player: number;
 }
 
-interface Time {
+interface CourseTime {
     rank: number;
     player_id: string;
     time: number;
@@ -41,7 +41,7 @@ interface Record {
 
 router.get('/', async function(req, res, next) {
     try {
-        const result: BulkCourse[] = await prisma.$queryRaw`
+        const result: CourseBulk[] = await prisma.$queryRaw`
             SELECT *
             FROM (
                 SELECT 
@@ -132,7 +132,7 @@ router.get('/:course_id', async function(req, res, next) {
 
 router.get('/times/:course_id', async function(req, res, next) {
     try {
-        const result: Time[] = await prisma.$queryRaw`
+        const result: CourseTime[] = await prisma.$queryRaw`
             WITH completions AS (
                 SELECT
                     DISTINCT ON ("playerId")
