@@ -114,7 +114,7 @@ router.get('/:player_id', async function(req, res, next) {
             ) b ON 1 = 1
             ;
         `;
-        res.status(200).json(json(result));
+        res.status(200).json(json(result)[0]);
     } catch (err) {
         console.log(err);
         return res.status(500).send(err);
@@ -194,29 +194,6 @@ router.get('/completions/finished/:player_id', async function(req, res, next) {
             ) b ON time."courseId" = b."courseId" AND time."playerId" = b."playerId"
             WHERE time."playerId" = ${req.params.player_id}
             ORDER BY time."courseId", time
-            ;
-        `;
-        res.status(200).json(json(result));
-    } catch (err) {
-        console.log(err);
-        return res.status(500).send(err);
-    }
-});
-
-router.get('/completions/unfinished/:player_id', async function(req, res, next) {
-    try {
-        const result: PlayerTime[] = await prisma.$queryRaw`
-            SELECT
-                course.name, course."courseId" AS course_id, NULL AS fastest_time, NULL AS deaths, NULL AS leaderboard_position, NULL AS time_id
-            FROM (
-                SELECT
-                    DISTINCT ON ("courseId")
-                    *
-                FROM time
-                WHERE time."playerId" = ${req.params.player_id}
-            ) a
-            RIGHT JOIN course ON a."courseId" = course."courseId"
-            WHERE "playerId" IS NULL
             ;
         `;
         res.status(200).json(json(result));

@@ -123,7 +123,7 @@ router.get('/:course_id', async function(req, res, next) {
             WHERE course."courseId" = ${req.params.course_id}
             ;
         `;
-        res.status(200).json(json(result));
+        res.status(200).json(json(result)[0]);
     } catch (err) {
         console.log(err);
         return res.status(500).send(err);
