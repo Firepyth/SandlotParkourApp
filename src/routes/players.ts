@@ -29,7 +29,12 @@ interface PlayerTime {
 router.get('/', async function(req, res, next) {
     try {
         const result: PlayerBulk[] = await prisma.$queryRaw`
-            SELECT a."playerId" AS player_id, COUNT(a."courseId") AS "completed_courses", b."avg_position", COALESCE(c."record_count", '0') AS "record_count"
+            SELECT 
+                a."playerId" AS player_id,
+                COUNT(a."courseId") AS "completed_courses",
+                b."avg_position",
+                COALESCE(c."record_count", '0') AS "record_count",
+                player.name AS player_name
             FROM (
                 SELECT
                     DISTINCT ON ("playerId", "courseId")
@@ -73,7 +78,8 @@ router.get('/', async function(req, res, next) {
                 )
                 GROUP BY "fastest_player"
             ) c ON a."playerId" = c."fastest_player"
-            GROUP BY a."playerId", b."avg_position", c."record_count"
+            JOIN player ON player."playerId" = a."playerId"
+            GROUP BY a."playerId", b."avg_position", c."record_count", player.name
             ;
         `;
         res.status(200).json(json(result));
@@ -88,6 +94,7 @@ router.get('/:player_id', async function(req, res, next) {
         const result: Player[] = await prisma.$queryRaw`
             SELECT
                 a."playerId" AS player_id,
+                player.name AS player_name,
                 a.completed_courses,
                 a.total_completions,
                 b.total_records
@@ -112,6 +119,7 @@ router.get('/:player_id', async function(req, res, next) {
                 )
                 WHERE "playerId" = ${req.params.player_id}
             ) b ON 1 = 1
+            JOIN player ON player."playerId" = ${req.params.player_id}
             ;
         `;
         res.status(200).json(json(result)[0]);

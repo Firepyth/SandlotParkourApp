@@ -32,7 +32,9 @@ router.get('/:course_id/:player_id', async function(req, res, next) {
                 b.first_deaths,
                 c.avg_time,
                 c.avg_deaths,
-                d.name
+                d.name AS course_name,
+                player."playerId" AS player_id,
+                player.name AS player_name
             FROM (
                 SELECT
                     leaderboard_position,
@@ -80,10 +82,12 @@ router.get('/:course_id/:player_id', async function(req, res, next) {
             ) c ON 1 = 1
             JOIN (
                 SELECT
-                    name
+                    name,
+                    "courseId"
                 FROM course
                 WHERE "courseId" = ${req.params.course_id}
             ) d ON 1 = 1
+            JOIN player ON player."playerId" = ${req.params.player_id}
             ;
         `;
         res.status(200).json(json(result)[0]);

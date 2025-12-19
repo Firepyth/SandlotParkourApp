@@ -46,7 +46,13 @@ router.get('/', async function(req, res, next) {
             FROM (
                 SELECT 
                     DISTINCT ON (course."courseId")
-                    course."courseId" AS course_id, name, created, time.time AS "record_time", time."playerId" AS "fastest_player", avg_times.avg_time, avg_times.avg_deaths
+                    course."courseId" AS course_id, 
+                    course.name, created, 
+                    time.time AS "record_time", 
+                    time."playerId" AS "fastest_player_id", 
+                    player.name AS "fastest_player_name", 
+                    avg_times.avg_time, 
+                    avg_times.avg_deaths
                 FROM course
                 JOIN time ON time."courseId" = course."courseId"
                 JOIN (
@@ -63,6 +69,7 @@ router.get('/', async function(req, res, next) {
                     ) AS p1
                     GROUP BY p1."courseId"
                 ) AS avg_times ON course."courseId" = avg_times."courseId"
+                JOIN player ON time."playerId" = player."playerId"
                 ORDER BY course."courseId", time
             ) result
             ORDER BY result.name 
@@ -86,7 +93,8 @@ router.get('/:course_id', async function(req, res, next) {
                 b.average_time,
                 c.fastest_time,
                 c.fastest_deaths,
-                c.fastest_player
+                c.fastest_player_id,
+                player.name AS fastest_player_name
             FROM course
             JOIN (
                 SElECT
@@ -102,7 +110,7 @@ router.get('/:course_id', async function(req, res, next) {
                     DISTINCT ON ("courseId")
                     time AS fastest_time,
                     deaths AS fastest_deaths,
-                    "playerId" AS fastest_player
+                    "playerId" AS fastest_player_id
                 FROM time
                 WHERE "courseId" = ${req.params.course_id}
                 ORDER BY "courseId", time
@@ -120,6 +128,7 @@ router.get('/:course_id', async function(req, res, next) {
                     ORDER BY "playerId", achieved
                 )
             ) d ON 1 = 1
+            JOIN player ON player."playerId" = c.fastest_player_id
             WHERE course."courseId" = ${req.params.course_id}
             ;
         `;
@@ -136,15 +145,23 @@ router.get('/times/:course_id', async function(req, res, next) {
             WITH completions AS (
                 SELECT
                     DISTINCT ON ("playerId")
-                    "timeId", "playerId", "time", "deaths"
+                    "timeId", 
+                    "playerId", 
+                    "time", 
+                    "deaths"
                 FROM time
                 WHERE "courseId" = ${req.params.course_id}
                 ORDER BY "playerId", "time"
             )
             SELECT
                 RANK() OVER (ORDER BY "time"),
-                "playerId" AS player_id, "time", "deaths", "timeId" AS time_id
+                completions."playerId" AS player_id,
+                player.name AS player_name,
+                "time",
+                "deaths",
+                "timeId" AS time_id
             FROM completions
+            JOIN player ON player."playerId" = completions."playerId"
             ;
         `;
         res.status(200).json(json(result));
@@ -160,8 +177,12 @@ router.get('/records/:course_id', async function(req, res, next) {
             SELECT
                 DISTINCT ON (MIN(time) OVER (ORDER BY achieved))
                 MIN(time) OVER (ORDER BY achieved) AS time,
-                achieved, "playerId" AS player_id, deaths
+                achieved, 
+                time."playerId" AS player_id,
+                player.name AS player_name,
+                deaths
             FROM time
+            JOIN player ON player."playerId" = time."playerId"
             WHERE "courseId" = ${req.params.course_id}
             ORDER BY MIN(time) OVER (ORDER BY achieved) DESC
             ;

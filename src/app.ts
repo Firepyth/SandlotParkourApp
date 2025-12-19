@@ -1,7 +1,10 @@
+import { prisma } from '../lib/prisma.js';
 import logger from 'morgan';
 import "dotenv/config";
 import express from 'express';
 import apiRouter from './routes/index.js';
+import schedule from 'node-schedule';
+import { updatePlayers, insertPlayers } from './helpers/managePlayers.js';
 const app = express();
 
 app.use(logger('dev'));
@@ -9,46 +12,21 @@ app.use(express.json());
 
 app.use('/api', apiRouter);
 
+try {
+  const currentPlayers: {playerId: string}[] = await prisma.$queryRaw`SELECT DISTINCT("playerId") FROM time`;
+  const existingPlayers: {playerId: string, name: string}[] = await prisma.$queryRaw`SELECT * FROM player`;
+  if (currentPlayers.length !== existingPlayers.length) {
+    console.log("Loading new players into the database.");
+    insertPlayers();
+  } else {
+    console.log("Player count up to date.");
+  }
+} catch (e) {
+  console.log("Failed to fetch records from database.");
+}
+
+schedule.scheduleJob('0 0 3 * * *', function(){
+  updatePlayers();
+});
+
 export default app;
-
-// async function main() {
-//   // Create a new user with a post
-  // const result = await prisma.$queryRaw`
-  //   SELECT *
-  //   FROM (
-  //       SELECT 
-  //           DISTINCT ON (course."courseId")
-  //           course."courseId", name, created, time.time AS "record_time", time."playerId" AS "fastest_player", avg_times.avg_time, avg_times.avg_deaths
-  //       FROM course
-  //       JOIN time ON time."courseId" = course."courseId"
-  //       JOIN (
-  //           SELECT AVG(p1.time) AS avg_time, AVG(p1.deaths) AS avg_deaths, p1."courseId"
-  //           FROM (
-  //               SELECT p1.* 
-  //               FROM time p1
-  //               JOIN (
-  //                   SELECT min(achieved) "runDate", CONCAT("courseId", "playerId") "courseId" FROM time GROUP BY CONCAT("courseId", "playerId")
-  //               ) AS p2 
-  //               ON p1.achieved = p2."runDate"
-  //               AND CONCAT(p1."courseId", p1."playerId") = p2."courseId"
-  //               ORDER BY "courseId"
-  //           ) AS p1
-  //           GROUP BY p1."courseId"
-  //       ) AS avg_times ON course."courseId" = avg_times."courseId"
-  //       ORDER BY course."courseId", time
-  //   ) result
-  //   ORDER BY result.name 
-  //   ;
-  // `;
-//   console.log('Created user:', result);
-// }
-
-// main()
-//   .then(async () => {
-//     await prisma.$disconnect()
-//   })
-//   .catch(async (e) => {
-//     console.error(e)
-//     await prisma.$disconnect()
-//     process.exit(1)
-//   })
