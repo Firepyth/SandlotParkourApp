@@ -9,83 +9,78 @@ interface Player {
     uuid: string;
 }
 
+const getName = async (uuid: string): Promise<string> => {
+    let name: string = '';
+    if (uuid.substring(0, 16) === '0000000000000000') {
+        try {
+            const xuid = parseInt(uuid, 16)
+            const res = await fetch(`https://playerdb.co/api/player/xbox/${xuid}`, {
+                headers: {
+                    "user-agent": "w0487205@nscc.ca"
+                }
+            });
+            const json = await res.json();
+            name = json.data.player ? json.data.player.username : '';
+            if (name === '') {
+                console.log('Fetch error. Using fallback API.');
+                const xuid = parseInt(uuid, 16)
+                const res = await fetch(`https://api.geysermc.org/v2/xbox/gamertag/${xuid}`);
+                const json = await res.json();
+                name = json.gamertag ? json.gamertag : '';
+            }
+            if (name === '') {
+                console.log('Duplicate fetch error. Using fallback API.');
+                const bedrockUuid: string = `${uuid.slice(0, 7)}-${uuid.slice(7,11)}-${uuid.slice(11,15)}-${uuid.slice(15,20)}-${uuid.slice(20)}`;
+                const res = await fetch(`https://mcprofile.io/api/v1/bedrock/fuid/${bedrockUuid}`);
+                if (res.ok === true) {
+                    const json = await res.json();
+                    name = json.gamertag ? json.gamertag : '';
+                }
+            }
+        } catch (e) {
+            console.log('Fetch error: ', e);
+        }
+    }
+    else {
+        try {
+            const res = await fetch(`https://playerdb.co/api/player/minecraft/${uuid}`, {
+                headers: {
+                    "user-agent": "w0487205@nscc.ca"
+                }
+            });
+            const json = await res.json();
+            name = json.data ? json.data.player.username : '';
+        } catch (e) {
+            console.log('Fetch error: ', e);
+        }
+    }
+    return name;
+}
+
 export const insertPlayers = async () => {
     const players: Player[] = await prisma.$queryRaw`
         SELECT
             DISTINCT("playerId") AS uuid
         FROM time
-        ;
-    `;
-    const existingPlayers: ExistingPlayer[] = await prisma.$queryRaw`
-        SELECT
-            "playerId" AS uuid,
-            name
-        FROM player
-        ;
+        WHERE "playerId" NOT IN (SELECT "playerId" AS uuid FROM player)
     `;
 
     let playersToInsert: string[] = [];
 
     for (let i: number = 0; i < players.length; i++) {
         const player = players[i];
-        let playerExists: boolean = false;
 
-        for (let j: number = 0; j < existingPlayers.length; j++) {
-            if (player.uuid.trim() === existingPlayers[j].uuid.trim()) {
-                playerExists = true;
-                break;
-            }
-        };
+        let name: string = await getName(player.uuid);
 
-        if (playerExists === false) {
-            let name: string = '';
-            if (player.uuid.substring(0, 16) === '0000000000000000') {
-                try {
-                    const bedrockUuid: string = `${player.uuid.slice(0, 7)}-${player.uuid.slice(7,11)}-${player.uuid.slice(11,15)}-${player.uuid.slice(15,20)}-${player.uuid.slice(20)}`;
-                    const res = await fetch(`https://mcprofile.io/api/v1/bedrock/fuid/${bedrockUuid}`);
-                    if (res.ok === true) {
-                        const json = await res.json();
-                        name = json.gamertag ? json.gamertag : '';
-                    }
-                    if (name === '') {
-                        console.log("Error: Name is undefined due to a fetch failure. Using fallback API.");
-                        const xuid = parseInt(player.uuid, 16)
-                        const res = await fetch(`https://api.geysermc.org/v2/xbox/gamertag/${xuid}`);
-                        const json = await res.json();
-                        name = json.gamertag ? json.gamertag : '';
-                    }
-                } catch (e) {
-                    console.log('Fetch error: ', e);
-                    name = '';
-                }
-            }
-            else {
-                try {
-                    const res = await fetch(`https://playerdb.co/api/player/minecraft/${player.uuid}`, {
-                        headers: {
-                            "user-agent": "w0487205@nscc.ca"
-                        }
-                    });
-                    const json = await res.json();
-                    name = json.data ? json.data.player.username : '';
-                } catch (e) {
-                    console.log('Fetch error: ', e);
-                    name = '';
-                }
-            }
-
-            if (name === '') {
-                console.log(`Error: Name is undefined due to a fetch error. Skipping player #${i + 1}.`);
-            }
-            else {
-                console.log(`Inserting: ${i + 1}/${players.length}`);
-                playersToInsert.push(`('${players[i].uuid}', '${name}')`);
-            }
-
-            await new Promise(r => setTimeout(r, 500));
-        } else {
-            console.log(`Player already exists. Skipping ${i + 1}/${players.length}`);
+        if (name === '') {
+            console.log(`Error: Name is undefined due to a fetch error. Skipping player ${i + 1}/${players.length}.`);
         }
+        else {
+            console.log(`Inserting: ${i + 1}/${players.length}. Name: ${name}`);
+            playersToInsert.push(`('${players[i].uuid}', '${name}')`);
+        }
+
+        await new Promise(r => setTimeout(r, 200));
     };
 
     if (playersToInsert.length >= 1) {
@@ -102,12 +97,6 @@ export const insertPlayers = async () => {
 }
 
 export const updatePlayers = async () => {
-    const players: Player[] = await prisma.$queryRaw`
-        SELECT
-            DISTINCT("playerId") AS uuid
-        FROM time
-        ;
-    `;
     const existingPlayers: ExistingPlayer[] = await prisma.$queryRaw`
         SELECT
             "playerId" AS uuid,
@@ -116,75 +105,31 @@ export const updatePlayers = async () => {
         ;
     `;
 
-    let playersToInsert: string[] = [];
+    let playersToUpdate: String[] = [];
 
-    for (let i: number = 0; i < players.length; i++) {
-        const player = players[i];
-        let existingIndex: false | number = false;
+    for (let i: number = 0; i < existingPlayers.length; i++) {
+        const player = existingPlayers[i];
 
-        for (let j: number = 0; j < existingPlayers.length; j++) {
-            if (player.uuid.trim() === existingPlayers[j].uuid.trim()) {
-                existingIndex = j;
-                break;
-            }
-        };
-
-        let name: string = '';
-        if (player.uuid.substring(0, 16) === '0000000000000000') {
-            try {
-                const bedrockUuid: string = `${player.uuid.slice(0, 7)}-${player.uuid.slice(7,11)}-${player.uuid.slice(11,15)}-${player.uuid.slice(15,20)}-${player.uuid.slice(20)}`;
-                const res = await fetch(`https://mcprofile.io/api/v1/bedrock/fuid/${bedrockUuid}`);
-                if (res.ok === true) {
-                    const json = await res.json();
-                    name = json.gamertag ? json.gamertag : '';
-                }
-                if (name === '') {
-                    console.log("Error: Name is undefined due to a fetch failure. Using fallback API.");
-                    const xuid = parseInt(player.uuid, 16)
-                    const res = await fetch(`https://api.geysermc.org/v2/xbox/gamertag/${xuid}`);
-                    const json = await res.json();
-                    name = json.gamertag ? json.gamertag : '';
-                }
-            } catch (e) {
-                console.log('Fetch error: ', e);
-                name = '';
-            }
-        }
-        else {
-            try {
-                const res = await fetch(`https://playerdb.co/api/player/minecraft/${player.uuid}`, {
-                    headers: {
-                        "user-agent": "w0487205@nscc.ca"
-                    }
-                });
-                const json = await res.json();
-                name = json.data ? json.data.player.username : '';
-            } catch (e) {
-                console.log('Fetch error: ', e);
-                name = '';
-            }
-        }
+        let name: string = await getName(player.uuid);
 
         if (name === '') {
-            console.log(`Error: Name is undefined due to a fetch error. Skipping player #${i + 1}.`);
+            console.log(`Error: Name is undefined due to a fetch error. Skipping player ${i + 1}/${existingPlayers.length}.`);
         }
-        else if (existingIndex !== false) {
-            if (name !== existingPlayers[existingIndex].name) {
-                console.log(`Updating: ${i + 1}/${players.length}`);
-                playersToInsert.push(`('${players[i].uuid}', '${name}')`);
-            }
-        } else {
-            console.log(`Inserting: ${i + 1}/${players.length}`);
-            playersToInsert.push(`('${players[i].uuid}', '${name}')`);
+        else if (name === player.name) {
+            console.log(`Player ${i + 1}/${existingPlayers.length} up to date. Name: ${player.name}`);
+        }
+        else {
+            console.log(`Updating: ${i + 1}/${existingPlayers.length}. Name: ${name}`);
+            playersToUpdate.push(`('${existingPlayers[i].uuid}', '${name}')`);
         }
 
-        await new Promise(r => setTimeout(r, 750));
+        await new Promise(r => setTimeout(r, 200));
     };
 
-    if (playersToInsert.length >= 1) {
+    if (playersToUpdate.length >= 1) {
         const result: number = await prisma.$executeRawUnsafe(`
             INSERT INTO player ("playerId", name)
-            VALUES ${playersToInsert.join(',')}
+            VALUES ${playersToUpdate.join(',')}
             ON CONFLICT ("playerId") DO UPDATE
                 SET "playerId" = EXCLUDED."playerId",
                     name = EXCLUDED.name

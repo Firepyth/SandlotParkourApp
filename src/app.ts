@@ -17,7 +17,7 @@ try {
   const existingPlayers: {playerId: string, name: string}[] = await prisma.$queryRaw`SELECT * FROM player`;
   if (currentPlayers.length !== existingPlayers.length) {
     console.log("Loading new players into the database.");
-    insertPlayers();
+    await insertPlayers();
   } else {
     console.log("Player count up to date.");
   }
@@ -26,6 +26,7 @@ try {
 }
 
 schedule.scheduleJob('0 0 3 * * *', function(){
+  insertPlayers();
   updatePlayers();
 });
 
