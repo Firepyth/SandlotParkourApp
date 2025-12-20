@@ -27,6 +27,7 @@ const getName = async (uuid: string): Promise<string> => {
                 const res = await fetch(`https://api.geysermc.org/v2/xbox/gamertag/${xuid}`);
                 const json = await res.json();
                 name = json.gamertag ? json.gamertag : '';
+                await new Promise(r => setTimeout(r, 1000));
             }
             if (name === '') {
                 console.log('Duplicate fetch error. Using fallback API.');
@@ -36,6 +37,7 @@ const getName = async (uuid: string): Promise<string> => {
                     const json = await res.json();
                     name = json.gamertag ? json.gamertag : '';
                 }
+                await new Promise(r => setTimeout(r, 1000));
             }
         } catch (e) {
             console.log('Fetch error: ', e);
@@ -79,8 +81,6 @@ export const insertPlayers = async () => {
             console.log(`Inserting: ${i + 1}/${players.length}. Name: ${name}`);
             playersToInsert.push(`('${players[i].uuid}', '${name}')`);
         }
-
-        await new Promise(r => setTimeout(r, 200));
     };
 
     if (playersToInsert.length >= 1) {
@@ -122,8 +122,6 @@ export const updatePlayers = async () => {
             console.log(`Updating: ${i + 1}/${existingPlayers.length}. Name: ${name}`);
             playersToUpdate.push(`('${existingPlayers[i].uuid}', '${name}')`);
         }
-
-        await new Promise(r => setTimeout(r, 200));
     };
 
     if (playersToUpdate.length >= 1) {

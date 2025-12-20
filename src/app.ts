@@ -25,9 +25,9 @@ try {
   console.log("Failed to fetch records from database.");
 }
 
-schedule.scheduleJob('0 0 3 * * *', function(){
+schedule.scheduleJob('0 0 3 * * *', async () => {
+  await updatePlayers();
   insertPlayers();
-  updatePlayers();
 });
 
 export default app;
