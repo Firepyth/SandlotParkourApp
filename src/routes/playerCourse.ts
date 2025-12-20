@@ -1,4 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
+import { Prisma } from '../../generated/prisma/client.js';
 import express from 'express';
 import json from '../helpers/json.js';
 const router = express.Router();
@@ -23,7 +24,7 @@ interface PlayerCourseTime {
 
 router.get('/:course_id/:player_id', async function(req, res, next) {
     try {
-        const result: PlayerCourse = await prisma.$queryRaw`
+        const result: PlayerCourse[] = await prisma.$queryRaw`
             SELECT
                 a.leaderboard_position,
                 a.fastest_time,
@@ -90,6 +91,9 @@ router.get('/:course_id/:player_id', async function(req, res, next) {
             JOIN player ON player."playerId" = ${req.params.player_id}
             ;
         `;
+        if (result.length === 0) {
+            return res.status(404).json({ error: `No player with the ID ${req.params.player_id} has completed course ${req.params.course_id}` });
+        }
         res.status(200).json(json(result)[0]);
     } catch (err) {
         console.log(err);
@@ -99,18 +103,42 @@ router.get('/:course_id/:player_id', async function(req, res, next) {
 
 router.get('/completions/:course_id/:player_id', async function(req, res, next) {
     try {
+        let sort: boolean = false;
+        let direction: string = req.query.direction === 'desc' ? 'DESC' : 'ASC'
+        const sortingOptions: string[] = [
+            "time",
+            "deaths",
+            "position",
+            "achieved"
+        ]
+        if (req.query.sort !== undefined) {
+            sortingOptions.forEach((item) => {
+                if (item === req.query.sort) {
+                    sort = true;
+                }
+            });
+        }
+
         const result: PlayerCourseTime[] = await prisma.$queryRaw`
-            SELECT "timeId" AS time_id, time, deaths, "position", "achieved"
+            SELECT *
             FROM (
-                SELECT
-                    *,
-                    RANK() OVER (ORDER BY time) AS "position"
-                FROM time
-                WHERE "courseId" = ${req.params.course_id}
-            )
-            WHERE
-                "playerId" = ${req.params.player_id}
+                SELECT "timeId" AS time_id, time, deaths, "position", "achieved"
+                FROM (
+                    SELECT
+                        *,
+                        RANK() OVER (ORDER BY time) AS "position"
+                    FROM time
+                    WHERE "courseId" = ${req.params.course_id}
+                )
+                WHERE
+                    "playerId" = ${req.params.player_id}
+            ) result
+            ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.position')} ${Prisma.raw(direction)}
+            ;
         `;
+        if (result.length === 0) {
+            return res.status(404).json({ error: `No player with the ID ${req.params.player_id} has completed course ${req.params.course_id}` });
+        }
         res.status(200).json(json(result));
     } catch (err) {
         console.log(err);

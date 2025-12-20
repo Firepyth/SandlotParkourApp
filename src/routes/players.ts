@@ -1,4 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
+import { Prisma } from '../../generated/prisma/client.js';
 import express from 'express';
 import json from '../helpers/json.js';
 const router = express.Router();
@@ -28,58 +29,78 @@ interface PlayerTime {
 
 router.get('/', async function(req, res, next) {
     try {
+        let sort: boolean = false;
+        let direction: string = req.query.direction === 'desc' ? 'DESC' : 'ASC'
+        const sortingOptions: string[] = [
+            "completed_courses",
+            "avg_position",
+            "record_count",
+            "player_name"
+        ]
+        if (req.query.sort !== undefined) {
+            sortingOptions.forEach((item) => {
+                if (item === req.query.sort) {
+                    sort = true;
+                }
+            });
+        }
+
         const result: PlayerBulk[] = await prisma.$queryRaw`
-            SELECT 
-                a."playerId" AS player_id,
-                COUNT(a."courseId") AS "completed_courses",
-                b."avg_position",
-                COALESCE(c."record_count", '0') AS "record_count",
-                player.name AS player_name
+            SELECT *
             FROM (
-                SELECT
-                    DISTINCT ON ("playerId", "courseId")
-                    *
-                FROM time
-                ORDER BY "playerId", "courseId"
-            ) a
-            JOIN (
-                WITH best_positions AS (WITH best_times AS (
-                        SELECT DISTINCT ON ("courseId", "playerId")
-                            "courseId",
-                            "playerId",
-                            "time" AS "best_time"
-                        FROM time
-                        ORDER BY "courseId", "playerId", "time" ASC
-                    )
-                    SELECT
-                        "courseId",
-                        "playerId",
-                        "best_time",
-                        RANK() OVER (PARTITION BY "courseId" ORDER BY "best_time" ASC) AS "leaderboard_position"
-                    FROM best_times
-                    ORDER BY "courseId", "leaderboard_position", "best_time"
-                )
-                SELECT
-                    AVG("leaderboard_position") as "avg_position",
-                    "playerId"
-                FROM best_positions
-                GROUP BY "playerId"
-                ORDER BY "avg_position"
-            ) b ON a."playerId" = b."playerId"
-            LEFT JOIN (
-                SELECT
-                    COUNT("fastest_player") AS record_count, "fastest_player"
+                SELECT 
+                    a."playerId" AS player_id,
+                    COUNT(a."courseId") AS "completed_courses",
+                    b."avg_position",
+                    COALESCE(c."record_count", '0') AS "record_count",
+                    player.name AS player_name
                 FROM (
                     SELECT
-                        DISTINCT ON ("courseId")
-                        "playerId" AS "fastest_player"
+                        DISTINCT ON ("playerId", "courseId")
+                        *
                     FROM time
-                    ORDER BY "courseId", time
-                )
-                GROUP BY "fastest_player"
-            ) c ON a."playerId" = c."fastest_player"
-            JOIN player ON player."playerId" = a."playerId"
-            GROUP BY a."playerId", b."avg_position", c."record_count", player.name
+                    ORDER BY "playerId", "courseId"
+                ) a
+                JOIN (
+                    WITH best_positions AS (WITH best_times AS (
+                            SELECT DISTINCT ON ("courseId", "playerId")
+                                "courseId",
+                                "playerId",
+                                "time" AS "best_time"
+                            FROM time
+                            ORDER BY "courseId", "playerId", "time" ASC
+                        )
+                        SELECT
+                            "courseId",
+                            "playerId",
+                            "best_time",
+                            RANK() OVER (PARTITION BY "courseId" ORDER BY "best_time" ASC) AS "leaderboard_position"
+                        FROM best_times
+                        ORDER BY "courseId", "leaderboard_position", "best_time"
+                    )
+                    SELECT
+                        AVG("leaderboard_position") as "avg_position",
+                        "playerId"
+                    FROM best_positions
+                    GROUP BY "playerId"
+                    ORDER BY "avg_position"
+                ) b ON a."playerId" = b."playerId"
+                LEFT JOIN (
+                    SELECT
+                        COUNT("fastest_player") AS record_count, "fastest_player"
+                    FROM (
+                        SELECT
+                            DISTINCT ON ("courseId")
+                            "playerId" AS "fastest_player"
+                        FROM time
+                        ORDER BY "courseId", time
+                    )
+                    GROUP BY "fastest_player"
+                ) c ON a."playerId" = c."fastest_player"
+                JOIN player ON player."playerId" = a."playerId"
+                GROUP BY a."playerId", b."avg_position", c."record_count", player.name
+            ) result
+            ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.player_name')} ${Prisma.raw(direction)}
             ;
         `;
         res.status(200).json(json(result));
@@ -122,6 +143,9 @@ router.get('/:player_id', async function(req, res, next) {
             JOIN player ON player."playerId" = ${req.params.player_id}
             ;
         `;
+        if (result.length === 0) {
+            return res.status(404).json({ error: `No players found with the ID ${req.params.player_id}` });
+        }
         res.status(200).json(json(result)[0]);
     } catch (err) {
         console.log(err);
@@ -131,42 +155,72 @@ router.get('/:player_id', async function(req, res, next) {
 
 router.get('/completions/all/:player_id', async function(req, res, next) {
     try {
-        const result: PlayerTime[] = await prisma.$queryRaw`
-            (SELECT
-                DISTINCT ON (time."courseId")
-                course.name, time."courseId" AS course_id, time AS "fastest_time", deaths, b."leaderboard_position", time."timeId" AS time_id
+        const player: {playerId: string}[] = await prisma.$queryRaw`
+            SELECT DISTINCT("playerId")
             FROM time
-            JOIN course ON course."courseId" = time."courseId"
-            JOIN (
-                WITH best_times AS (
-                    SELECT DISTINCT ON ("courseId", "playerId")
+            WHERE "playerId" = ${req.params.player_id}
+            ;
+        `;
+        if (player.length === 0) {
+            return res.status(404).json({ error: `No players found with the ID ${req.params.player_id}` });
+        }
+
+        let sort: boolean = false;
+        let direction: string = req.query.direction === 'desc' ? 'DESC' : 'ASC'
+        const sortingOptions: string[] = [
+            "name",
+            "fastest_time",
+            "deaths",
+            "leaderboard_position"
+        ]
+        if (req.query.sort !== undefined) {
+            sortingOptions.forEach((item) => {
+                if (item === req.query.sort) {
+                    sort = true;
+                }
+            });
+        }
+
+        const result: PlayerTime[] = await prisma.$queryRaw`
+            SELECT *
+            FROM (
+                (SELECT
+                    DISTINCT ON (time."courseId")
+                    course.name, time."courseId" AS course_id, time AS "fastest_time", deaths, b."leaderboard_position", time."timeId" AS time_id
+                FROM time
+                JOIN course ON course."courseId" = time."courseId"
+                JOIN (
+                    WITH best_times AS (
+                        SELECT DISTINCT ON ("courseId", "playerId")
+                            "courseId",
+                            "playerId",
+                            "time" AS "best_time"
+                        FROM time
+                        ORDER BY "courseId", "playerId", "time" ASC
+                    )
+                    SELECT
                         "courseId",
                         "playerId",
-                        "time" AS "best_time"
-                    FROM time
-                    ORDER BY "courseId", "playerId", "time" ASC
-                )
-                SELECT
-                    "courseId",
-                    "playerId",
-                    RANK() OVER (PARTITION BY "courseId" ORDER BY "best_time" ASC) AS "leaderboard_position"
-                FROM best_times
-                ORDER BY "courseId", "leaderboard_position", "best_time"
-            ) b ON time."courseId" = b."courseId" AND time."playerId" = b."playerId"
-            WHERE time."playerId" = ${req.params.player_id}
-            ORDER BY time."courseId", time)
-            UNION
-            (SELECT
-                course.name, course."courseId", NULL, NULL, NULL, NULL
-            FROM (
-                SELECT
-                    DISTINCT ON ("courseId")
-                    *
-                FROM time
+                        RANK() OVER (PARTITION BY "courseId" ORDER BY "best_time" ASC) AS "leaderboard_position"
+                    FROM best_times
+                    ORDER BY "courseId", "leaderboard_position", "best_time"
+                ) b ON time."courseId" = b."courseId" AND time."playerId" = b."playerId"
                 WHERE time."playerId" = ${req.params.player_id}
-            ) a
-            RIGHT JOIN course ON a."courseId" = course."courseId"
-            WHERE "playerId" IS NULL)
+                ORDER BY time."courseId", time)
+                UNION
+                (SELECT
+                    course.name, course."courseId", NULL, NULL, NULL, NULL
+                FROM (
+                    SELECT
+                        DISTINCT ON ("courseId")
+                        *
+                    FROM time
+                    WHERE time."playerId" = ${req.params.player_id}
+                ) a
+                RIGHT JOIN course ON a."courseId" = course."courseId"
+                WHERE "playerId" IS NULL)
+            ) result
+            ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.name')} ${Prisma.raw(direction)}
             ;
         `;
         res.status(200).json(json(result));
@@ -178,30 +232,60 @@ router.get('/completions/all/:player_id', async function(req, res, next) {
 
 router.get('/completions/finished/:player_id', async function(req, res, next) {
     try {
-        const result: PlayerTime[] = await prisma.$queryRaw`
-            SELECT
-                DISTINCT ON (time."courseId")
-                course.name, time."courseId" AS course_id, time AS "fastest_time", deaths, b."leaderboard_position", time."timeId" AS time_id
+        const player: {playerId: string}[] = await prisma.$queryRaw`
+            SELECT DISTINCT("playerId")
             FROM time
-            JOIN course ON course."courseId" = time."courseId"
-            JOIN (
-                WITH best_times AS (
-                    SELECT DISTINCT ON ("courseId", "playerId")
+            WHERE "playerId" = ${req.params.player_id}
+            ;
+        `;
+        if (player.length === 0) {
+            return res.status(404).json({ error: `No players found with the ID ${req.params.player_id}` });
+        }
+
+        let sort: boolean = false;
+        let direction: string = req.query.direction === 'desc' ? 'DESC' : 'ASC'
+        const sortingOptions: string[] = [
+            "name",
+            "fastest_time",
+            "deaths",
+            "leaderboard_position"
+        ]
+        if (req.query.sort !== undefined) {
+            sortingOptions.forEach((item) => {
+                if (item === req.query.sort) {
+                    sort = true;
+                }
+            });
+        }
+
+        const result: PlayerTime[] = await prisma.$queryRaw`
+            SELECT *
+            FROM (
+                SELECT
+                    DISTINCT ON (time."courseId")
+                    course.name, time."courseId" AS course_id, time AS "fastest_time", deaths, b."leaderboard_position", time."timeId" AS time_id
+                FROM time
+                JOIN course ON course."courseId" = time."courseId"
+                JOIN (
+                    WITH best_times AS (
+                        SELECT DISTINCT ON ("courseId", "playerId")
+                            "courseId",
+                            "playerId",
+                            "time" AS "best_time"
+                        FROM time
+                        ORDER BY "courseId", "playerId", "time" ASC
+                    )
+                    SELECT
                         "courseId",
                         "playerId",
-                        "time" AS "best_time"
-                    FROM time
-                    ORDER BY "courseId", "playerId", "time" ASC
-                )
-                SELECT
-                    "courseId",
-                    "playerId",
-                    RANK() OVER (PARTITION BY "courseId" ORDER BY "best_time" ASC) AS "leaderboard_position"
-                FROM best_times
-                ORDER BY "courseId", "leaderboard_position", "best_time"
-            ) b ON time."courseId" = b."courseId" AND time."playerId" = b."playerId"
-            WHERE time."playerId" = ${req.params.player_id}
-            ORDER BY time."courseId", time
+                        RANK() OVER (PARTITION BY "courseId" ORDER BY "best_time" ASC) AS "leaderboard_position"
+                    FROM best_times
+                    ORDER BY "courseId", "leaderboard_position", "best_time"
+                ) b ON time."courseId" = b."courseId" AND time."playerId" = b."playerId"
+                WHERE time."playerId" = ${req.params.player_id}
+                ORDER BY time."courseId", time
+            ) result
+            ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.name')} ${Prisma.raw(direction)}
             ;
         `;
         res.status(200).json(json(result));
@@ -213,18 +297,48 @@ router.get('/completions/finished/:player_id', async function(req, res, next) {
 
 router.get('/completions/unfinished/:player_id', async function(req, res, next) {
     try {
+        const player: {playerId: string}[] = await prisma.$queryRaw`
+            SELECT DISTINCT("playerId")
+            FROM time
+            WHERE "playerId" = ${req.params.player_id}
+            ;
+        `;
+        if (player.length === 0) {
+            return res.status(404).json({ error: `No players found with the ID ${req.params.player_id}` });
+        }
+
+        let sort: boolean = false;
+        let direction: string = req.query.direction === 'desc' ? 'DESC' : 'ASC'
+        const sortingOptions: string[] = [
+            "name",
+            "fastest_time",
+            "deaths",
+            "leaderboard_position"
+        ]
+        if (req.query.sort !== undefined) {
+            sortingOptions.forEach((item) => {
+                if (item === req.query.sort) {
+                    sort = true;
+                }
+            });
+        }
+
         const result: PlayerTime[] = await prisma.$queryRaw`
-            SELECT
-                course.name, course."courseId" AS course_id, NULL AS fastest_time, NULL AS deaths, NULL AS leaderboard_position, NULL AS time_id
+            SELECT *
             FROM (
                 SELECT
-                    DISTINCT ON ("courseId")
-                    *
-                FROM time
-                WHERE time."playerId" = ${req.params.player_id}
-            ) a
-            RIGHT JOIN course ON a."courseId" = course."courseId"
-            WHERE "playerId" IS NULL
+                    course.name, course."courseId" AS course_id, NULL AS fastest_time, NULL AS deaths, NULL AS leaderboard_position, NULL AS time_id
+                FROM (
+                    SELECT
+                        DISTINCT ON ("courseId")
+                        *
+                    FROM time
+                    WHERE time."playerId" = ${req.params.player_id}
+                ) a
+                RIGHT JOIN course ON a."courseId" = course."courseId"
+                WHERE "playerId" IS NULL
+            ) result
+            ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.name')} ${Prisma.raw(direction)}
             ;
         `;
         res.status(200).json(json(result));

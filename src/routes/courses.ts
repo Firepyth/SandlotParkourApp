@@ -1,4 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
+import { Prisma } from '../../generated/prisma/client.js';
 import express from 'express';
 import json from '../helpers/json.js';
 const router = express.Router();
@@ -41,13 +42,32 @@ interface Record {
 
 router.get('/', async function(req, res, next) {
     try {
+        let sort: boolean = false;
+        let direction: string = req.query.direction === 'desc' ? 'DESC' : 'ASC'
+        const sortingOptions: string[] = [
+            "name",
+            "created",
+            "record_time",
+            "fastest_player_name",
+            "avg_time",
+            "avg_deaths"
+        ]
+        if (req.query.sort !== undefined) {
+            sortingOptions.forEach((item) => {
+                if (item === req.query.sort) {
+                    sort = true;
+                }
+            });
+        }
+        
         const result: CourseBulk[] = await prisma.$queryRaw`
             SELECT *
             FROM (
                 SELECT 
                     DISTINCT ON (course."courseId")
                     course."courseId" AS course_id, 
-                    course.name, created, 
+                    course.name,
+                    created, 
                     time.time AS "record_time", 
                     time."playerId" AS "fastest_player_id", 
                     player.name AS "fastest_player_name", 
@@ -72,7 +92,7 @@ router.get('/', async function(req, res, next) {
                 JOIN player ON time."playerId" = player."playerId"
                 ORDER BY course."courseId", time
             ) result
-            ORDER BY result.name 
+            ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.name')} ${Prisma.raw(direction)}
             ;
         `;
         res.status(200).json(json(result));
@@ -132,6 +152,9 @@ router.get('/:course_id', async function(req, res, next) {
             WHERE course."courseId" = ${req.params.course_id}
             ;
         `;
+        if (result.length === 0) {
+            return res.status(404).json({ error: `No courses found with the ID ${req.params.course_id}` });
+        }
         res.status(200).json(json(result)[0]);
     } catch (err) {
         console.log(err);
@@ -141,29 +164,51 @@ router.get('/:course_id', async function(req, res, next) {
 
 router.get('/times/:course_id', async function(req, res, next) {
     try {
+        let sort: boolean = false;
+        let direction: string = req.query.direction === 'desc' ? 'DESC' : 'ASC'
+        const sortingOptions: string[] = [
+            "rank",
+            "player_name",
+            "deaths"
+        ]
+        if (req.query.sort !== undefined) {
+            sortingOptions.forEach((item) => {
+                if (item === req.query.sort) {
+                    sort = true;
+                }
+            });
+        }
+
         const result: CourseTime[] = await prisma.$queryRaw`
-            WITH completions AS (
+            SELECT *
+                FROM (
+                WITH completions AS (
+                    SELECT
+                        DISTINCT ON ("playerId")
+                        "timeId", 
+                        "playerId", 
+                        "time", 
+                        "deaths"
+                    FROM time
+                    WHERE "courseId" = ${req.params.course_id}
+                    ORDER BY "playerId", "time"
+                )
                 SELECT
-                    DISTINCT ON ("playerId")
-                    "timeId", 
-                    "playerId", 
-                    "time", 
-                    "deaths"
-                FROM time
-                WHERE "courseId" = ${req.params.course_id}
-                ORDER BY "playerId", "time"
-            )
-            SELECT
-                RANK() OVER (ORDER BY "time"),
-                completions."playerId" AS player_id,
-                player.name AS player_name,
-                "time",
-                "deaths",
-                "timeId" AS time_id
-            FROM completions
-            JOIN player ON player."playerId" = completions."playerId"
+                    RANK() OVER (ORDER BY "time"),
+                    completions."playerId" AS player_id,
+                    player.name AS player_name,
+                    "time",
+                    "deaths",
+                    "timeId" AS time_id
+                FROM completions
+                JOIN player ON player."playerId" = completions."playerId"
+            ) result
+            ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.rank')} ${Prisma.raw(direction)}
             ;
         `;
+        if (result.length === 0) {
+            return res.status(404).json({ error: `No courses found with the ID ${req.params.course_id}` });
+        }
         res.status(200).json(json(result));
     } catch (err) {
         console.log(err);
@@ -187,6 +232,9 @@ router.get('/records/:course_id', async function(req, res, next) {
             ORDER BY MIN(time) OVER (ORDER BY achieved) DESC
             ;
         `;
+        if (result.length === 0) {
+            return res.status(404).json({ error: `No courses found with the ID ${req.params.course_id}` });
+        }
         res.status(200).json(json(result));
     } catch (err) {
         console.log(err);
