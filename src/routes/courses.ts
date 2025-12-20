@@ -92,9 +92,13 @@ router.get('/', async function(req, res, next) {
                 JOIN player ON time."playerId" = player."playerId"
                 ORDER BY course."courseId", time
             ) result
+            WHERE LOWER(result.name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
             ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.name')} ${Prisma.raw(direction)}
             ;
         `;
+        if (result.length === 0) {
+            return res.status(404).json({ error: `No courses found with the search term ${req.query.search}` });
+        }
         res.status(200).json(json(result));
     } catch (err) {
         console.log(err);
@@ -179,6 +183,16 @@ router.get('/times/:course_id', async function(req, res, next) {
             });
         }
 
+        const course: {courseId: string}[] = await prisma.$queryRaw`
+            SELECT "courseId"
+            FROM course
+            WHERE "courseId" = ${req.params.course_id}
+        `;
+
+        if (course.length === 0) {
+            return res.status(404).json({ error: `No courses found with the ID ${req.params.course_id}` });
+        }
+
         const result: CourseTime[] = await prisma.$queryRaw`
             SELECT *
                 FROM (
@@ -203,11 +217,12 @@ router.get('/times/:course_id', async function(req, res, next) {
                 FROM completions
                 JOIN player ON player."playerId" = completions."playerId"
             ) result
+            WHERE LOWER(result.player_name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
             ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.rank')} ${Prisma.raw(direction)}
             ;
         `;
         if (result.length === 0) {
-            return res.status(404).json({ error: `No courses found with the ID ${req.params.course_id}` });
+            return res.status(404).json({ error: `No players found with the search term ${req.query.search}` });
         }
         res.status(200).json(json(result));
     } catch (err) {

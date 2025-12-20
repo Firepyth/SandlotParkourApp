@@ -100,9 +100,13 @@ router.get('/', async function(req, res, next) {
                 JOIN player ON player."playerId" = a."playerId"
                 GROUP BY a."playerId", b."avg_position", c."record_count", player.name
             ) result
+            WHERE LOWER(result.player_name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
             ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.player_name')} ${Prisma.raw(direction)}
             ;
         `;
+        if (result.length === 0) {
+            return res.status(404).json({ error: `No players found with the search term ${req.query.search}` });
+        }
         res.status(200).json(json(result));
     } catch (err) {
         console.log(err);
@@ -220,9 +224,13 @@ router.get('/completions/all/:player_id', async function(req, res, next) {
                 RIGHT JOIN course ON a."courseId" = course."courseId"
                 WHERE "playerId" IS NULL)
             ) result
+            WHERE LOWER(result.name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
             ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.name')} ${Prisma.raw(direction)}
             ;
         `;
+        if (result.length === 0) {
+            return res.status(404).json({ error: `No courses found with the search term ${req.query.search}` });
+        }
         res.status(200).json(json(result));
     } catch (err) {
         console.log(err);
@@ -285,9 +293,13 @@ router.get('/completions/finished/:player_id', async function(req, res, next) {
                 WHERE time."playerId" = ${req.params.player_id}
                 ORDER BY time."courseId", time
             ) result
+            WHERE LOWER(result.name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
             ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.name')} ${Prisma.raw(direction)}
             ;
         `;
+        if (result.length === 0) {
+            return res.status(404).json({ error: `No courses found with the search term ${req.query.search}` });
+        }
         res.status(200).json(json(result));
     } catch (err) {
         console.log(err);
@@ -338,9 +350,13 @@ router.get('/completions/unfinished/:player_id', async function(req, res, next) 
                 RIGHT JOIN course ON a."courseId" = course."courseId"
                 WHERE "playerId" IS NULL
             ) result
+            WHERE LOWER(result.name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
             ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.name')} ${Prisma.raw(direction)}
             ;
         `;
+        if (result.length === 0) {
+            return res.status(404).json({ error: `No courses found with the search term ${req.query.search}` });
+        }
         res.status(200).json(json(result));
     } catch (err) {
         console.log(err);
