@@ -30,7 +30,7 @@ router.get('/', async function(req, res, next) {
         res.status(200).json(json(result)[0]);
     } catch (err) {
         console.log(err);
-        return res.status(500).send(err);
+        return res.status(500).send();
     }
 });
 

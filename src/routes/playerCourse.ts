@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import { Prisma } from '../../generated/prisma/client.js';
+import { getPage, getDirection, getSort } from '../helpers/handleQueryParams.js';
 import express from 'express';
 import json from '../helpers/json.js';
 const router = express.Router();
@@ -33,6 +34,7 @@ router.get('/:course_id/:player_id', async function(req, res, next) {
                 b.first_deaths,
                 c.avg_time,
                 c.avg_deaths,
+                c.total_completions,
                 d.name AS course_name,
                 player."playerId" AS player_id,
                 player.name AS player_name
@@ -75,7 +77,8 @@ router.get('/:course_id/:player_id', async function(req, res, next) {
             JOIN (
                 SELECT
                     AVG(time) AS avg_time,
-                    AVG(deaths) AS avg_deaths
+                    AVG(deaths) AS avg_deaths,
+                    COUNT("playerId") AS total_completions
                 FROM time
                 WHERE
                     "courseId" = ${req.params.course_id} AND
@@ -97,27 +100,23 @@ router.get('/:course_id/:player_id', async function(req, res, next) {
         res.status(200).json(json(result)[0]);
     } catch (err) {
         console.log(err);
-        return res.status(500).send(err);
+        return res.status(500).send();
     }
 });
 
 router.get('/completions/:course_id/:player_id', async function(req, res, next) {
     try {
-        let sort: boolean = false;
-        let direction: string = req.query.direction === 'desc' ? 'DESC' : 'ASC'
-        const sortingOptions: string[] = [
-            "time",
-            "deaths",
-            "position",
-            "achieved"
-        ]
-        if (req.query.sort !== undefined) {
-            sortingOptions.forEach((item) => {
-                if (item === req.query.sort) {
-                    sort = true;
-                }
-            });
-        }
+        let sort: string | boolean = getSort(
+            [
+                "time",
+                "deaths",
+                "position",
+                "achieved"
+            ],
+            req.query.sort as string
+        );
+        let direction: string = getDirection(req.query.direction as string);
+        const page = getPage(req.query.page as string);
 
         const result: PlayerCourseTime[] = await prisma.$queryRaw`
             SELECT *
@@ -134,6 +133,8 @@ router.get('/completions/:course_id/:player_id', async function(req, res, next) 
                     "playerId" = ${req.params.player_id}
             ) result
             ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.position')} ${Prisma.raw(direction)}
+            LIMIT 200
+            OFFSET ${(page - 1) * 200}
             ;
         `;
         if (result.length === 0) {
@@ -142,8 +143,89 @@ router.get('/completions/:course_id/:player_id', async function(req, res, next) 
         res.status(200).json(json(result));
     } catch (err) {
         console.log(err);
-        return res.status(500).send(err);
+        return res.status(500).send();
     }
 });
+
+router.get('/search', async function(req, res, next) {
+    try {
+        const result: PlayerCourseTime[] = await prisma.$queryRaw`
+            (
+                SELECT
+                    "courseId" AS course_id,
+                    name AS course_name,
+                    NULL AS player_id,
+                    NULL AS player_name
+                FROM course
+                WHERE LOWER(name) LIKE LOWER('%' || ${req.query.search || ''} || '%')
+                LIMIT 3
+            )
+            UNION
+            (
+                SELECT
+                    NULL,
+                    NULL,
+                    "playerId",
+                    name
+                FROM player
+                WHERE LOWER(name) LIKE LOWER('%' || ${req.query.search || ''} || '%')
+                LIMIT 3
+            )
+            ;
+        `;
+        if (result.length === 0) {
+            return res.status(404).json({ error: `No players or courses match the search term ${req.query.search}` });
+        }
+        res.status(200).json(json(result));
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send();
+    }
+});
+
+router.get('/recent', async function(req, res, next) {
+    try {
+        const result: PlayerCourseTime[] = await prisma.$queryRaw`
+            (
+                SELECT
+                    "courseId" AS course_id,
+                    name AS course_name,
+                    created AS course_created,
+                    NULL AS completed_courses,
+                    NULL AS player_id,
+                    NULL AS player_name
+                FROM course
+                ORDER BY created DESC
+                LIMIT 5
+            )
+            UNION
+            (
+                SELECT
+                    NULL,
+                    NULL,
+                    NULL,
+                    COUNT(DISTINCT("courseId")) AS completed_courses,
+                    time."playerId" AS player_id,
+                    player.name AS player_name
+                FROM time
+                JOIN player ON player."playerId" = time."playerId"
+                GROUP BY time."playerId", player.name
+                ORDER BY completed_courses DESC
+                LIMIT 5
+            )
+            ORDER BY completed_courses DESC, course_created DESC
+            ;
+        `;
+        if (result.length === 0) {
+            return res.status(404).json({ error: `No courses or players found.` });
+        }
+        res.status(200).json(json(result));
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send();
+    }
+});
+
+
 
 export default router;

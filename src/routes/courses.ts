@@ -1,5 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
 import { Prisma } from '../../generated/prisma/client.js';
+import { getPage, getDirection, getSort } from '../helpers/handleQueryParams.js';
+import { checkForCourse } from '../helpers/checkID.js';
 import express from 'express';
 import json from '../helpers/json.js';
 const router = express.Router();
@@ -42,23 +44,18 @@ interface Record {
 
 router.get('/', async function(req, res, next) {
     try {
-        let sort: boolean = false;
-        let direction: string = req.query.direction === 'desc' ? 'DESC' : 'ASC'
-        const sortingOptions: string[] = [
-            "name",
-            "created",
-            "record_time",
-            "fastest_player_name",
-            "avg_time",
-            "avg_deaths"
-        ]
-        if (req.query.sort !== undefined) {
-            sortingOptions.forEach((item) => {
-                if (item === req.query.sort) {
-                    sort = true;
-                }
-            });
-        }
+        let sort: string | boolean = getSort(
+            [
+                "name",
+                "created",
+                "record_time",
+                "fastest_player_name",
+                "avg_time"
+            ],
+            req.query.sort as string
+        );
+        let direction: string = getDirection(req.query.direction as string);
+        const page = getPage(req.query.page as string);
         
         const result: CourseBulk[] = await prisma.$queryRaw`
             SELECT *
@@ -71,12 +68,11 @@ router.get('/', async function(req, res, next) {
                     time.time AS "record_time", 
                     time."playerId" AS "fastest_player_id", 
                     player.name AS "fastest_player_name", 
-                    avg_times.avg_time, 
-                    avg_times.avg_deaths
+                    avg_times.avg_time
                 FROM course
                 JOIN time ON time."courseId" = course."courseId"
                 JOIN (
-                    SELECT AVG(p1.time) AS avg_time, AVG(p1.deaths) AS avg_deaths, p1."courseId"
+                    SELECT AVG(p1.time) AS avg_time, p1."courseId"
                     FROM (
                         SELECT p1.* 
                         FROM time p1
@@ -93,7 +89,9 @@ router.get('/', async function(req, res, next) {
                 ORDER BY course."courseId", time
             ) result
             WHERE LOWER(result.name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
-            ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.name')} ${Prisma.raw(direction)}
+            ORDER BY ${sort ? Prisma.raw('result.' + sort) : Prisma.raw('result.name')} ${Prisma.raw(direction)}
+            LIMIT 50
+            OFFSET ${(page - 1) * 50}
             ;
         `;
         if (result.length === 0) {
@@ -102,7 +100,7 @@ router.get('/', async function(req, res, next) {
         res.status(200).json(json(result));
     } catch (err) {
         console.log(err);
-        return res.status(500).send(err);
+        return res.status(500).send();
     }
 });
 
@@ -114,17 +112,17 @@ router.get('/:course_id', async function(req, res, next) {
                 course.created,
                 b.total_completions,
                 b.unique_completions,
-                b.average_time,
                 c.fastest_time,
                 c.fastest_deaths,
                 c.fastest_player_id,
+                d.average_first_time,
+                d.average_first_deaths,
                 player.name AS fastest_player_name
             FROM course
             JOIN (
                 SElECT
                     COUNT("timeId") AS total_completions,
-                    COUNT(DISTINCT("playerId")) AS unique_completions,
-                    AVG(time) AS average_time
+                    COUNT(DISTINCT("playerId")) AS unique_completions
                 FROM time
                 WHERE "courseId" = ${req.params.course_id}
                 GROUP BY "courseId"
@@ -162,36 +160,27 @@ router.get('/:course_id', async function(req, res, next) {
         res.status(200).json(json(result)[0]);
     } catch (err) {
         console.log(err);
-        return res.status(500).send(err);
+        return res.status(500).send();
     }
 });
 
 router.get('/times/:course_id', async function(req, res, next) {
     try {
-        let sort: boolean = false;
-        let direction: string = req.query.direction === 'desc' ? 'DESC' : 'ASC'
-        const sortingOptions: string[] = [
-            "rank",
-            "player_name",
-            "deaths"
-        ]
-        if (req.query.sort !== undefined) {
-            sortingOptions.forEach((item) => {
-                if (item === req.query.sort) {
-                    sort = true;
-                }
-            });
-        }
-
-        const course: {courseId: string}[] = await prisma.$queryRaw`
-            SELECT "courseId"
-            FROM course
-            WHERE "courseId" = ${req.params.course_id}
-        `;
-
-        if (course.length === 0) {
+        const course: boolean = await checkForCourse(req.params.course_id);
+        if (course === false) {
             return res.status(404).json({ error: `No courses found with the ID ${req.params.course_id}` });
         }
+
+        let sort: string | boolean = getSort(
+            [
+                "rank",
+                "player_name",
+                "deaths"
+            ],
+            req.query.sort as string
+        );
+        let direction: string = getDirection(req.query.direction as string);
+        const page = getPage(req.query.page as string);
 
         const result: CourseTime[] = await prisma.$queryRaw`
             SELECT *
@@ -218,7 +207,9 @@ router.get('/times/:course_id', async function(req, res, next) {
                 JOIN player ON player."playerId" = completions."playerId"
             ) result
             WHERE LOWER(result.player_name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
-            ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.rank')} ${Prisma.raw(direction)}
+            ORDER BY ${sort ? Prisma.raw('result.' + sort) : Prisma.raw('result.rank')} ${Prisma.raw(direction)}
+            LIMIT 50
+            OFFSET ${(page - 1) * 50}
             ;
         `;
         if (result.length === 0) {
@@ -227,7 +218,7 @@ router.get('/times/:course_id', async function(req, res, next) {
         res.status(200).json(json(result));
     } catch (err) {
         console.log(err);
-        return res.status(500).send(err);
+        return res.status(500).send();
     }
 });
 
@@ -253,7 +244,7 @@ router.get('/records/:course_id', async function(req, res, next) {
         res.status(200).json(json(result));
     } catch (err) {
         console.log(err);
-        return res.status(500).send(err);
+        return res.status(500).send();
     }
 });
 
