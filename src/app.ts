@@ -4,9 +4,16 @@ import "dotenv/config";
 import express from 'express';
 import apiRouter from './routes/index.js';
 import schedule from 'node-schedule';
+import cors from 'cors';
 import { updatePlayers, insertPlayers } from './helpers/managePlayers.js';
 const app = express();
 
+app.use(cors(
+  {
+    origin: 'http://localhost:5173',
+    credentials: true
+  }
+));
 app.use(logger('dev'));
 app.use(express.json());
 
