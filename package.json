@@ -5,9 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "tsc && node ./build/bin/www.js",
-    "start-schedule": "tsc && node ./build/src/scheduler/startSchedule.js",
-    "stop-schedule": "tsc && node ./build/src/scheduler/stopSchedule.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsc && concurrently \"npm start\" \"cd client && npm run dev\" --kill-others"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +15,7 @@
   "devDependencies": {
     "@types/node": "^25.0.3",
     "@types/pg": "^8.16.0",
+    "concurrently": "^9.2.1",
     "prisma": "^7.2.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"

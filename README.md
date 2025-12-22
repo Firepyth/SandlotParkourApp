@@ -18,3 +18,5 @@ This is the beginnings of my Sandlot parkour stats app. More to come
 |GET /api/players/completions/unfinished/{player_id}|Responds with all unfinished parkour courses for one player. Supports ?direction=, ?sort=, and ?search= for filtering.|
 |GET /api/playercourse/{course_id}/{player_id}|Responds with stats for one player on one parkour course.|
 |GET /api/playercourse/completions/{course_id}/{player_id}|Responds with all parkour course completions for one player on one course. Supports ?direction= and ?sort= for filtering.|
+|GET /api/playercourse/search|Responds with the top three course and player matches based on ?search= query.|
+|GET /api/playercourse/recent|Responds with the five most recent courses and players.|
