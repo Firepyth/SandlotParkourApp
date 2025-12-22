@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import HomeTable from '../components/homeTable';
+import { Link } from "react-router";
+import Footer from '../components/Footer';
 
 export default function Main () {
     const { data, isPending, error } = useQuery({
@@ -28,44 +30,51 @@ export default function Main () {
         <h2>About</h2>
         <p>Basic site description :D</p>
         <div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>
-                            Date added
-                        </th>
-                        <th>
-                            Course name
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {isPending ? loadingMsg : error ? errorMsg :
-                        <>
-                            <HomeTable data={data} type="course" />
-                        </>
-                    }
-                </tbody>
-            </table>
-            <table>
-                <thead>
-                    <tr>
-                        <th>
-                            Courses
-                        </th>
-                        <th>
-                            Player name
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {isPending ? loadingMsg : error ? errorMsg :
-                        <>
-                            <HomeTable data={data} type="player" />
-                        </>
-                    }
-                </tbody>
-            </table>
+            <div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>
+                                Date added
+                            </th>
+                            <th>
+                                Course name
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {isPending ? loadingMsg : error ? errorMsg :
+                            <>
+                                <HomeTable data={data} type="course" />
+                            </>
+                        }
+                    </tbody>
+                </table>
+                <Link to="/courses">See all</Link>
+            </div>
+            <div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>
+                                Courses
+                            </th>
+                            <th>
+                                Player name
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {isPending ? loadingMsg : error ? errorMsg :
+                            <>
+                                <HomeTable data={data} type="player" />
+                            </>
+                        }
+                    </tbody>
+                </table>
+                <Link to="/players">See all</Link>
+            </div>
         </div>
+        <Footer />
     </>
 }
