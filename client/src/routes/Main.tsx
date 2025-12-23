@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import HomeTable from '../components/homeTable';
+import HomeTable from '../components/HomeTable';
 import { Link } from "react-router";
 import Footer from '../components/Footer';
 
@@ -29,16 +29,17 @@ export default function Main () {
         <h1>Main Title</h1>
         <h2>About</h2>
         <p>Basic site description :D</p>
-        <div>
+        <div className="flex gap-5">
             <div>
+                <h2>Recently added courses</h2>
                 <table>
                     <thead>
                         <tr>
                             <th>
-                                Date added
+                                Course name
                             </th>
                             <th>
-                                Course name
+                                Date added
                             </th>
                         </tr>
                     </thead>
@@ -53,14 +54,15 @@ export default function Main () {
                 <Link to="/courses">See all</Link>
             </div>
             <div>
+                <h2>Top players</h2>
                 <table>
                     <thead>
                         <tr>
                             <th>
-                                Courses
+                                Player name
                             </th>
                             <th>
-                                Player name
+                                Courses
                             </th>
                         </tr>
                     </thead>
