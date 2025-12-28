@@ -23,7 +23,7 @@ interface PlayerCourseTime {
     achieved: Date;
 }
 
-router.get('/:course_id/:player_id', async function(req, res, next) {
+router.get('/:player_id/:course_id', async function(req, res, next) {
     try {
         const result: PlayerCourse[] = await prisma.$queryRaw`
             SELECT
@@ -104,14 +104,14 @@ router.get('/:course_id/:player_id', async function(req, res, next) {
     }
 });
 
-router.get('/completions/:course_id/:player_id', async function(req, res, next) {
+router.get('/completions/:player_id/:course_id', async function(req, res, next) {
     try {
         let sort: string | boolean = getSort(
             [
                 "time",
                 "deaths",
-                "position",
-                "achieved"
+                "leaderboard_position",
+                "time_achieved"
             ],
             req.query.sort as string
         );
@@ -121,7 +121,12 @@ router.get('/completions/:course_id/:player_id', async function(req, res, next) 
         const result: PlayerCourseTime[] = await prisma.$queryRaw`
             SELECT *
             FROM (
-                SELECT "timeId" AS time_id, time, deaths, "position", "achieved"
+                SELECT
+                    "timeId" AS time_id,
+                    time,
+                    deaths,
+                    "position" AS leaderboard_position,
+                    achieved AS time_achieved
                 FROM (
                     SELECT
                         *,
@@ -132,7 +137,7 @@ router.get('/completions/:course_id/:player_id', async function(req, res, next) 
                 WHERE
                     "playerId" = ${req.params.player_id}
             ) result
-            ORDER BY ${sort ? Prisma.raw('result.' + req.query.sort) : Prisma.raw('result.position')} ${Prisma.raw(direction)}
+            ORDER BY ${sort ? Prisma.raw(`result.${req.query.sort} ${direction}, result.leaderboard_position`) : Prisma.raw(`result.leaderboard_position ${direction}`)}
             LIMIT 200
             OFFSET ${(page - 1) * 200}
             ;
@@ -158,6 +163,7 @@ router.get('/search', async function(req, res, next) {
                     NULL AS player_name
                 FROM course
                 WHERE LOWER(name) LIKE LOWER('%' || ${req.query.search || ''} || '%')
+                ORDER BY course_name
                 LIMIT 3
             )
             UNION
@@ -169,6 +175,7 @@ router.get('/search', async function(req, res, next) {
                     name
                 FROM player
                 WHERE LOWER(name) LIKE LOWER('%' || ${req.query.search || ''} || '%')
+                ORDER BY name
                 LIMIT 3
             )
             ;

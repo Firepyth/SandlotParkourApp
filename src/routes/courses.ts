@@ -46,9 +46,9 @@ router.get('/', async function(req, res, next) {
     try {
         let sort: string | boolean = getSort(
             [
-                "name",
-                "created",
-                "record_time",
+                "course_name",
+                "course_created",
+                "fastest_time",
                 "fastest_player_name",
                 "avg_time"
             ],
@@ -63,9 +63,9 @@ router.get('/', async function(req, res, next) {
                 SELECT 
                     DISTINCT ON (course."courseId")
                     course."courseId" AS course_id, 
-                    course.name,
-                    created, 
-                    time.time AS "record_time", 
+                    course.name AS course_name,
+                    created AS course_created, 
+                    time.time AS "fastest_time", 
                     time."playerId" AS "fastest_player_id", 
                     player.name AS "fastest_player_name", 
                     avg_times.avg_time
@@ -88,8 +88,8 @@ router.get('/', async function(req, res, next) {
                 JOIN player ON time."playerId" = player."playerId"
                 ORDER BY course."courseId", time
             ) result
-            WHERE LOWER(result.name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
-            ORDER BY ${sort ? Prisma.raw('result.' + sort) : Prisma.raw('result.name')} ${Prisma.raw(direction)}
+            WHERE LOWER(result.course_name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
+            ORDER BY ${sort ? Prisma.raw(`result.${sort} ${direction}, result.course_name ASC`) : Prisma.raw(`result.course_name ${direction}`)}
             LIMIT 50
             OFFSET ${(page - 1) * 50}
             ;
@@ -108,15 +108,15 @@ router.get('/:course_id', async function(req, res, next) {
     try {
         const result: Course[] = await prisma.$queryRaw`
             SELECT
-                course.name,
-                course.created,
+                course.name AS course_name,
+                course.created AS course_created,
                 b.total_completions,
                 b.unique_completions,
                 c.fastest_time,
                 c.fastest_deaths,
                 c.fastest_player_id,
-                d.average_first_time,
-                d.average_first_deaths,
+                d.avg_first_time,
+                d.avg_first_deaths,
                 player.name AS fastest_player_name
             FROM course
             JOIN (
@@ -139,8 +139,8 @@ router.get('/:course_id', async function(req, res, next) {
             ) c ON 1 = 1
             JOIN (
                 SELECT
-                    AVG(time) AS average_first_time,
-                    AVG(deaths) AS average_first_deaths
+                    AVG(time) AS avg_first_time,
+                    AVG(deaths) AS avg_first_deaths
                 FROM (
                     SELECT
                         DISTINCT ON ("playerId")
@@ -164,7 +164,7 @@ router.get('/:course_id', async function(req, res, next) {
     }
 });
 
-router.get('/times/:course_id', async function(req, res, next) {
+router.get('/completions/:course_id', async function(req, res, next) {
     try {
         const course: boolean = await checkForCourse(req.params.course_id);
         if (course === false) {
@@ -184,7 +184,7 @@ router.get('/times/:course_id', async function(req, res, next) {
 
         const result: CourseTime[] = await prisma.$queryRaw`
             SELECT *
-                FROM (
+            FROM (
                 WITH completions AS (
                     SELECT
                         DISTINCT ON ("playerId")
@@ -197,7 +197,7 @@ router.get('/times/:course_id', async function(req, res, next) {
                     ORDER BY "playerId", "time"
                 )
                 SELECT
-                    RANK() OVER (ORDER BY "time"),
+                    RANK() OVER (ORDER BY "time") AS rank,
                     completions."playerId" AS player_id,
                     player.name AS player_name,
                     "time",
@@ -207,7 +207,7 @@ router.get('/times/:course_id', async function(req, res, next) {
                 JOIN player ON player."playerId" = completions."playerId"
             ) result
             WHERE LOWER(result.player_name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
-            ORDER BY ${sort ? Prisma.raw('result.' + sort) : Prisma.raw('result.rank')} ${Prisma.raw(direction)}
+            ORDER BY ${sort ? Prisma.raw(`result.${sort} ${direction}, result.rank ASC`) : Prisma.raw(`result.rank ${direction}`)}
             LIMIT 50
             OFFSET ${(page - 1) * 50}
             ;
@@ -228,7 +228,7 @@ router.get('/records/:course_id', async function(req, res, next) {
             SELECT
                 DISTINCT ON (MIN(time) OVER (ORDER BY achieved))
                 MIN(time) OVER (ORDER BY achieved) AS time,
-                achieved, 
+                achieved AS time_achieved, 
                 time."playerId" AS player_id,
                 player.name AS player_name,
                 deaths
