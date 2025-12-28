@@ -3,15 +3,15 @@ import { useNavigate, useParams } from "react-router";
 import { toDate, toTime } from '../helpers/convert';
 
 interface Course {
-    name: string;
-    created: string;
+    course_name: string;
+    course_created: string;
     total_completions: number;
     unique_completions: number;
     fastest_time: number;
     fastest_deaths: number;
     fastest_player_id: string;
-    average_first_time: number;
-    average_first_deaths: number;
+    avg_first_time: number;
+    avg_first_deaths: number;
     fastest_player_name: string;
 }
 
@@ -29,10 +29,17 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
 
     const { data, isPending, error } = useQuery({
         queryKey: [`CourseDetailsCompletions${id}`],
-        queryFn: (): Promise<CourseTime[]> => fetch(`${import.meta.env.VITE_API_URL}/courses/times/${id}`).then(r => r.json())
+        queryFn: (): Promise<CourseTime[]> => fetch(`${import.meta.env.VITE_API_URL}/courses/completions/${id}`).then(r => r.json())
     });
 
     const loadCourses = (data: CourseTime[]) => {
+        if (data.length === undefined) {
+            return <tr>
+                <td colSpan={4}>
+                    No completions found.
+                </td>
+            </tr>
+        }
         return data.map((courseTime: CourseTime) => {
             return <tr key={courseTime.time_id} onClick={() => navigate(`/players/${courseTime.player_id}/${id}`)} className="cursor-pointer">
                 <td key={`${courseTime.time_id}_rank`}>
@@ -88,17 +95,19 @@ export default function CourseDetails () {
     if (error) return <p>Error retrieving data.</p>;
 
     return <>
-        <h1>{data.name}</h1>
-        <p>Created: {toDate(data.created)}</p>
-        <p>Total completions: {data.total_completions}</p>
-        <p>Unique completions: {data.unique_completions}</p>
-        <p>Fastest time: {toTime(data.fastest_time)}</p>
-        <p>Fastest deaths: {data.fastest_deaths}</p>
-        <p onClick={() => navigate(`/players/${data.fastest_player_id}/${id}`)} className="flex cursor-pointer">
-            Fastest player: <img src={`https://mc-heads.net/avatar/${data.fastest_player_id}`} alt={data.fastest_player_name} width="24px" height="24px"/>{data.fastest_player_name}
-        </p>
-        <p>Average first time: {toTime(data.average_first_time)}</p>
-        <p>Average first deaths: {Number(data.average_first_deaths).toFixed(1)}</p>
+        <h1>{data.course_name}</h1>
+        <p>Created: {toDate(data.course_created)}</p>
+        {data.total_completions === null ? <p>No completions found.</p> : <>
+            <p>Total completions: {data.total_completions}</p>
+            <p>Unique completions: {data.unique_completions}</p>
+            <p>Fastest time: {toTime(data.fastest_time)}</p>
+            <p>Fastest deaths: {data.fastest_deaths}</p>
+            <p onClick={() => navigate(`/players/${data.fastest_player_id}/${id}`)} className="flex cursor-pointer">
+                Fastest player: <img src={`https://mc-heads.net/avatar/${data.fastest_player_id}`} alt={data.fastest_player_name} width="24px" height="24px"/>{data.fastest_player_name}
+            </p>
+            <p>Average first time: {toTime(data.avg_first_time)}</p>
+            <p>Average first deaths: {Number(data.avg_first_deaths).toFixed(1)}</p>
+        </>}
         <table>
             <thead>
                 <tr>

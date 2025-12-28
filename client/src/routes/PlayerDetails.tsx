@@ -12,7 +12,7 @@ interface Player {
 }
 
 interface PlayerTime {
-    name: string;
+    course_name: string;
     course_id: number;
     fastest_time: number;
     deaths: number;
@@ -32,7 +32,7 @@ const CourseDetailsTable = ({ id }: { id: string }) => {
         return data.map((playerTime: PlayerTime) => {
             return <tr key={playerTime.course_id} onClick={() => navigate(`/players/${id}/${playerTime.course_id}`)} className="cursor-pointer">
                 <td key={`${playerTime.course_id}_name`}>
-                    {playerTime.name}
+                    {playerTime.course_name}
                 </td>
                 <td key={`${playerTime.course_id}_rank`}>
                     {playerTime.leaderboard_position}

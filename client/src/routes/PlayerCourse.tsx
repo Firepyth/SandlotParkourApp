@@ -20,21 +20,21 @@ interface PlayerCourseTimes {
     time_id: number;
     time: number;
     deaths: number;
-    position: number;
-    achieved: string;
+    leaderboard_position: number;
+    time_achieved: string;
 }
 
 const PlayerCourseTable = ({ player_id, course_id }: { player_id: string, course_id: number }) => {
     const { data, isPending, error } = useQuery({
         queryKey: [`PlayerCourseCompletions${player_id}_${course_id}`],
-        queryFn: (): Promise<PlayerCourseTimes[]> => fetch(`${import.meta.env.VITE_API_URL}/playercourse/completions/${course_id}/${player_id}`).then(r => r.json())
+        queryFn: (): Promise<PlayerCourseTimes[]> => fetch(`${import.meta.env.VITE_API_URL}/playercourse/completions/${player_id}/${course_id}`).then(r => r.json())
     });
 
     const loadCourses = (data: PlayerCourseTimes[]) => {
         return data.map((playerCourseTime: PlayerCourseTimes) => {
             return <tr key={playerCourseTime.time_id}>
                 <td key={`${playerCourseTime.time_id}_rank`}>
-                    {playerCourseTime.position}
+                    {playerCourseTime.leaderboard_position}
                 </td>
                 <td key={`${playerCourseTime.time_id}_time`}>
                     {toTime(playerCourseTime.time)}
@@ -43,7 +43,7 @@ const PlayerCourseTable = ({ player_id, course_id }: { player_id: string, course
                     {playerCourseTime.deaths}
                 </td>
                 <td key={`${playerCourseTime.time_id}_achieved`}>
-                    {toDate(playerCourseTime.achieved)}
+                    {toDate(playerCourseTime.time_achieved)}
                 </td>
             </tr>
         });
@@ -78,7 +78,7 @@ export default function PlayerCourse () {
 
     const { data, isPending, error } = useQuery({
         queryKey: [`PlayerCourse${player_id}_${course_id}`],
-        queryFn: (): Promise<PlayerCourse> => fetch(`${import.meta.env.VITE_API_URL}/playercourse/${course_id}/${player_id}`).then(r => r.json())
+        queryFn: (): Promise<PlayerCourse> => fetch(`${import.meta.env.VITE_API_URL}/playercourse/${player_id}/${course_id}`).then(r => r.json())
     });
 
     if (isPending) return <p>Loading...</p>;

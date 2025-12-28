@@ -4,9 +4,9 @@ import { toDate, toTime } from '../helpers/convert';
 
 interface Course {
     course_id: number;
-    name: string;
-    created: string;
-    record_time: number;
+    course_name: string;
+    course_created: string;
+    fastest_time: number;
     fastest_player_id: string;
     fastest_player_name: string;
     avg_time: number;
@@ -28,16 +28,16 @@ export default function Courses () {
         return data.map((course: Course) => {
             return <tr key={course.course_id} onClick={() => navigate(`/courses/${course.course_id}`)} className="cursor-pointer">
                 <td key={`${course.course_id}_name`}>
-                    {course.name}
+                    {course.course_name}
                 </td>
                 <td key={`${course.course_id}_created`}>
-                    {toDate(course.created)}
+                    {toDate(course.course_created)}
                 </td>
                 <td key={`${course.course_id}_avg`}>
                     {toTime(course.avg_time)}
                 </td>
                 <td key={`${course.course_id}_record`}>
-                    {toTime(course.record_time)}
+                    {toTime(course.fastest_time)}
                 </td>
                 <td key={`${course.course_id}_player`} className="flex" onClick={(e) => handlePlayerNavigate(e, course)}>
                     <img src={`https://mc-heads.net/avatar/${course.fastest_player_id}`} alt={course.fastest_player_name} width="24px" height="24px"/>

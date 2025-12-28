@@ -119,7 +119,7 @@ router.get('/:course_id', async function(req, res, next) {
                 d.avg_first_deaths,
                 player.name AS fastest_player_name
             FROM course
-            JOIN (
+            LEFT JOIN (
                 SElECT
                     COUNT("timeId") AS total_completions,
                     COUNT(DISTINCT("playerId")) AS unique_completions
@@ -127,7 +127,7 @@ router.get('/:course_id', async function(req, res, next) {
                 WHERE "courseId" = ${req.params.course_id}
                 GROUP BY "courseId"
             ) b ON 1 = 1
-            JOIN (
+            LEFT JOIN (
                 SELECT
                     DISTINCT ON ("courseId")
                     time AS fastest_time,
@@ -137,7 +137,7 @@ router.get('/:course_id', async function(req, res, next) {
                 WHERE "courseId" = ${req.params.course_id}
                 ORDER BY "courseId", time
             ) c ON 1 = 1
-            JOIN (
+            LEFT JOIN (
                 SELECT
                     AVG(time) AS avg_first_time,
                     AVG(deaths) AS avg_first_deaths
@@ -150,7 +150,7 @@ router.get('/:course_id', async function(req, res, next) {
                     ORDER BY "playerId", achieved
                 )
             ) d ON 1 = 1
-            JOIN player ON player."playerId" = c.fastest_player_id
+            LEFT JOIN player ON player."playerId" = c.fastest_player_id
             WHERE course."courseId" = ${req.params.course_id}
             ;
         `;
