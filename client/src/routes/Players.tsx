@@ -55,7 +55,7 @@ export default function Players () {
         }
         return data.map((player: Player) => {
             return <tr key={player.player_id} onClick={() => navigate(`/players/${player.player_id}`)} className="cursor-pointer">
-                <TableCell>
+                <TableCell className="flex">
                     <img src={`https://mc-heads.net/avatar/${player.player_id}`} alt={player.player_name} width="24px" height="24px"/>
                     {player.player_name}
                 </TableCell>
