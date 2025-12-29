@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router";
 import { toTime, toDate, toTitle } from '../helpers/convert';
 import { useState } from 'react';
 import TableHeading from '../components/TableHeading';
+import TableCell from '../components/TableCell';
 
 interface PlayerCourse {
     leaderboard_position: number;
@@ -35,18 +36,18 @@ const PlayerCourseTable = ({ player_id, course_id, sort, direction }: { player_i
     const loadCourses = (data: PlayerCourseTimes[]) => {
         return data.map((playerCourseTime: PlayerCourseTimes) => {
             return <tr key={playerCourseTime.time_id}>
-                <td key={`${playerCourseTime.time_id}_rank`}>
+                <TableCell>
                     {playerCourseTime.leaderboard_position}
-                </td>
-                <td key={`${playerCourseTime.time_id}_time`}>
+                </TableCell>
+                <TableCell>
                     {toTime(playerCourseTime.time)}
-                </td>
-                <td key={`${playerCourseTime.time_id}_deaths`}>
+                </TableCell>
+                <TableCell>
                     {playerCourseTime.deaths}
-                </td>
-                <td key={`${playerCourseTime.time_id}_achieved`}>
+                </TableCell>
+                <TableCell>
                     {toDate(playerCourseTime.time_achieved)}
-                </td>
+                </TableCell>
             </tr>
         });
     }

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from "react-router";
 import { toDate, toTime, toTitle } from '../helpers/convert';
 import TableHeading from '../components/TableHeading';
+import TableCell from '../components/TableCell';
 
 interface Course {
     course_id: number;
@@ -27,11 +28,6 @@ export default function Courses () {
         queryKey: ['Courses'],
         queryFn: (): Promise<Course[]> => fetch(`${import.meta.env.VITE_API_URL}/courses?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
     });
-
-    const handlePlayerNavigate = (e: any, course: Course) => {
-        e.stopPropagation();
-        navigate(`/players/${course.fastest_player_id}/${course.course_id}`);
-    }
 
     const handleSort = async (newSort: string) => {
         if (sort === newSort) {
@@ -62,22 +58,22 @@ export default function Courses () {
         }
         return data.map((course: Course) => {
             return <tr key={course.course_id} onClick={() => navigate(`/courses/${course.course_id}`)} className="cursor-pointer">
-                <td key={`${course.course_id}_name`}>
+                <TableCell>
                     {toTitle(course.course_name)}
-                </td>
-                <td key={`${course.course_id}_created`}>
+                </TableCell>
+                <TableCell>
                     {toDate(course.course_created)}
-                </td>
-                <td key={`${course.course_id}_avg`}>
+                </TableCell>
+                <TableCell>
                     {toTime(course.avg_time)}
-                </td>
-                <td key={`${course.course_id}_record`}>
+                </TableCell>
+                <TableCell>
                     {toTime(course.fastest_time)}
-                </td>
-                <td key={`${course.course_id}_player`} className="flex" onClick={(e) => handlePlayerNavigate(e, course)}>
+                </TableCell>
+                <TableCell className="flex" route={`/players/${course.fastest_player_id}/${course.course_id}`}>
                     <img src={`https://mc-heads.net/avatar/${course.fastest_player_id}`} alt={course.fastest_player_name} width="24px" height="24px"/>
                     {course.fastest_player_name}
-                </td>
+                </TableCell>
             </tr>
         });
     }

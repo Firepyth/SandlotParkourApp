@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router";
 import { toTime, toTitle } from '../helpers/convert';
 import { useState } from 'react';
 import TableHeading from '../components/TableHeading';
+import TableCell from '../components/TableCell';
 
 interface Player {
     player_name: string;
@@ -40,18 +41,18 @@ const CourseDetailsTable = ({ id, sort, search, direction }: { id: string, sort:
         }
         return data.map((playerTime: PlayerTime) => {
             return <tr key={playerTime.course_id} onClick={() => navigate(`/players/${id}/${playerTime.course_id}`)} className="cursor-pointer">
-                <td key={`${playerTime.course_id}_name`}>
+                <TableCell>
                     {toTitle(playerTime.course_name)}
-                </td>
-                <td key={`${playerTime.course_id}_rank`}>
+                </TableCell>
+                <TableCell>
                     {playerTime.leaderboard_position}
-                </td>
-                <td key={`${playerTime.course_id}_time`}>
+                </TableCell>
+                <TableCell>
                     {toTime(playerTime.fastest_time)}
-                </td>
-                <td key={`${playerTime.course_id}_deaths`}>
+                </TableCell>
+                <TableCell>
                     {playerTime.deaths}
-                </td>
+                </TableCell>
             </tr>
         });
     }

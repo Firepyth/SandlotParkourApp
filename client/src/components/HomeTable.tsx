@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router";
 import { toDate, toTitle } from '../helpers/convert';
+import TableCell from "./TableCell";
 
 interface Data {
     course_id: number;
@@ -18,8 +19,8 @@ export default function HomeTable ({ data, type }: { data: Data[], type: string}
 
         return data.map((item) => {
             return <tr key={`${item.course_id}_row`} onClick={() => navigate(`/courses/${item.course_id}`)} className="cursor-pointer">
-                    <td key={`${item.course_id}_name`}>{toTitle(item.course_name)}</td>
-                    <td key={`${item.course_id}_created`}>{toDate(item.course_created)}</td>
+                    <TableCell>{toTitle(item.course_name)}</TableCell>
+                    <TableCell>{toDate(item.course_created)}</TableCell>
                 </tr>
         })
     }
@@ -28,11 +29,11 @@ export default function HomeTable ({ data, type }: { data: Data[], type: string}
 
         return data.map((item) => {
             return <tr key={`${item.player_id}_row`} onClick={() => navigate(`/players/${item.player_id}`)} className="cursor-pointer">
-                    <td key={`${item.player_id}_name`} className="flex">
+                    <TableCell className="flex">
                         <img src={`https://mc-heads.net/avatar/${item.player_id}`} alt={item.player_name} width="24px" height="24px"/>
                         {item.player_name}
-                    </td>
-                    <td key={`${item.player_id}_created`}>{item.completed_courses}</td>
+                    </TableCell>
+                    <TableCell>{item.completed_courses}</TableCell>
                 </tr>
         })
     }

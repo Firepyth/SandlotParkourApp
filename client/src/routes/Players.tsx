@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate } from "react-router";
 import TableHeading from '../components/TableHeading';
+import TableCell from '../components/TableCell';
 
 interface Player {
     player_id: string;
@@ -54,19 +55,19 @@ export default function Players () {
         }
         return data.map((player: Player) => {
             return <tr key={player.player_id} onClick={() => navigate(`/players/${player.player_id}`)} className="cursor-pointer">
-                <td key={`${player.player_id}_name`} className="flex">
+                <TableCell>
                     <img src={`https://mc-heads.net/avatar/${player.player_id}`} alt={player.player_name} width="24px" height="24px"/>
                     {player.player_name}
-                </td>
-                <td key={`${player.player_id}_created`}>
+                </TableCell>
+                <TableCell>
                     {player.completed_courses}
-                </td>
-                <td key={`${player.player_id}_avg`}>
+                </TableCell>
+                <TableCell>
                     {Number(player.avg_position).toFixed(1)}
-                </td>
-                <td key={`${player.player_id}_record`}>
+                </TableCell>
+                <TableCell>
                     {player.total_records}
-                </td>
+                </TableCell>
             </tr>
         });
     }

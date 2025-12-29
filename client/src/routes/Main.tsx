@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import HomeTable from '../components/HomeTable';
 import { Link } from "react-router";
 import Footer from '../components/Footer';
+import TableHeading from '../components/TableHeading';
 
 export default function Main () {
     const { data, isPending, error } = useQuery({
@@ -11,7 +12,7 @@ export default function Main () {
 
     const loadingMsg = <>
         <tr>
-            <td>
+            <td colSpan={4}>
                 Loading...
             </td>
         </tr>
@@ -19,7 +20,7 @@ export default function Main () {
 
     const errorMsg = <>
         <tr>
-            <td>
+            <td colSpan={4}>
                 Error retrieving data.
             </td>
         </tr>
@@ -35,12 +36,12 @@ export default function Main () {
                 <table>
                     <thead>
                         <tr>
-                            <th>
+                            <TableHeading interactive={false}>
                                 Course name
-                            </th>
-                            <th>
+                            </TableHeading>
+                            <TableHeading interactive={false}>
                                 Date added
-                            </th>
+                            </TableHeading>
                         </tr>
                     </thead>
                     <tbody>
@@ -58,12 +59,12 @@ export default function Main () {
                 <table>
                     <thead>
                         <tr>
-                            <th>
+                            <TableHeading interactive={false}>
                                 Player name
-                            </th>
-                            <th>
+                            </TableHeading>
+                            <TableHeading interactive={false}>
                                 Courses
-                            </th>
+                            </TableHeading>
                         </tr>
                     </thead>
                     <tbody>

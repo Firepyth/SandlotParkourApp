@@ -1,4 +1,13 @@
-export default function TableHeading ({children, handleSort, sort, direction, column, interactive = true}: {children: React.ReactNode, handleSort: Function, sort: string, direction: string, column: string, interactive?: boolean}) {
+interface TableHeadingProps {
+    children: React.ReactNode, 
+    handleSort?: Function, 
+    sort?: string, 
+    direction?: string, 
+    column?: string, 
+    interactive?: boolean
+}
+
+export default function TableHeading ({children = '', handleSort = () => {}, sort, direction = '', column = '', interactive = true}: TableHeadingProps) {
     if (!interactive) {
         return <th>
             {children}

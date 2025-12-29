@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router";
 import { toDate, toTime, toTitle } from '../helpers/convert';
 import { useState } from 'react';
 import TableHeading from '../components/TableHeading';
+import TableCell from '../components/TableCell';
 
 interface Course {
     course_name: string;
@@ -44,26 +45,26 @@ const CourseDetailsTable = ({ id, sort, search, direction }: { id: number, sort:
         }
         return data.map((courseTime: CourseTime) => {
             return <tr key={courseTime.time_id} onClick={() => navigate(`/players/${courseTime.player_id}/${id}`)} className="cursor-pointer">
-                <td key={`${courseTime.time_id}_rank`}>
+                <TableCell>
                     {courseTime.rank}
-                </td>
-                <td key={`${courseTime.time_id}_name`} className="flex">
+                </TableCell>
+                <TableCell className="flex">
                     <img src={`https://mc-heads.net/avatar/${courseTime.player_id}`} alt={courseTime.player_name} width="24px" height="24px"/>
                     {courseTime.player_name}
-                </td>
-                <td key={`${courseTime.time_id}_time`}>
+                </TableCell>
+                <TableCell>
                     {toTime(courseTime.time)}
-                </td>
-                <td key={`${courseTime.time_id}_deaths`}>
+                </TableCell>
+                <TableCell>
                     {courseTime.deaths}
-                </td>
+                </TableCell>
             </tr>
         });
     }
 
     const loadingMsg = <>
         <tr>
-            <td>
+            <td colSpan={4}>
                 Loading...
             </td>
         </tr>
@@ -71,7 +72,7 @@ const CourseDetailsTable = ({ id, sort, search, direction }: { id: number, sort:
 
     const errorMsg = <>
         <tr>
-            <td>
+            <td colSpan={4}>
                 Error retrieving data.
             </td>
         </tr>
