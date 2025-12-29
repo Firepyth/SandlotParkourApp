@@ -1,6 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from "react-router";
-import { toTime, toDate } from '../helpers/convert';
+import { toTime, toDate, toTitle } from '../helpers/convert';
+import { useState } from 'react';
+import TableHeading from '../components/TableHeading';
 
 interface PlayerCourse {
     leaderboard_position: number;
@@ -24,10 +26,10 @@ interface PlayerCourseTimes {
     time_achieved: string;
 }
 
-const PlayerCourseTable = ({ player_id, course_id }: { player_id: string, course_id: number }) => {
+const PlayerCourseTable = ({ player_id, course_id, sort, direction }: { player_id: string, course_id: number, sort: string, direction: string }) => {
     const { data, isPending, error } = useQuery({
         queryKey: [`PlayerCourseCompletions${player_id}_${course_id}`],
-        queryFn: (): Promise<PlayerCourseTimes[]> => fetch(`${import.meta.env.VITE_API_URL}/playercourse/completions/${player_id}/${course_id}`).then(r => r.json())
+        queryFn: (): Promise<PlayerCourseTimes[]> => fetch(`${import.meta.env.VITE_API_URL}/playercourse/completions/${player_id}/${course_id}?sort=${sort}&direction=${direction}`).then(r => r.json())
     });
 
     const loadCourses = (data: PlayerCourseTimes[]) => {
@@ -75,18 +77,33 @@ const PlayerCourseTable = ({ player_id, course_id }: { player_id: string, course
 export default function PlayerCourse () {
     const navigate = useNavigate();
     const { player_id, course_id } = useParams();
+    const queryClient = useQueryClient();
+
+    const [sort, setSort] = useState('leaderboard_position');
+    const [direction, setDirection] = useState('ASC');
 
     const { data, isPending, error } = useQuery({
         queryKey: [`PlayerCourse${player_id}_${course_id}`],
         queryFn: (): Promise<PlayerCourse> => fetch(`${import.meta.env.VITE_API_URL}/playercourse/${player_id}/${course_id}`).then(r => r.json())
     });
 
+    const handleSort = async (newSort: string) => {
+        if (sort === newSort) {
+            await setDirection(direction === 'ASC' ? 'DESC' : 'ASC');
+        }
+        else {
+            await setDirection('ASC');
+            await setSort(newSort);
+        }
+        queryClient.invalidateQueries({queryKey: [`PlayerCourseCompletions${player_id}_${course_id}`]});
+    }
+
     if (isPending) return <p>Loading...</p>;
     if (error) return <p>Error retrieving data.</p>;
 
     return <>
         <h1 className="flex cursor-pointer" onClick={() => navigate(`/players/${player_id}`)}><img src={`https://mc-heads.net/avatar/${data.player_id}`} alt={data.player_name} width="48px" height="48px"/>{data.player_name}</h1>
-        <h2 className="cursor-pointer" onClick={() => navigate(`/courses/${course_id}`)}>{data.course_name}</h2>
+        <h2 className="cursor-pointer" onClick={() => navigate(`/courses/${course_id}`)}>{toTitle(data.course_name)}</h2>
         <p>Highest leaderboard position: {data.leaderboard_position}</p>
         <p>Fastest time: {toTime(data.fastest_time)}</p>
         <p>Fastest deaths: {data.fastest_deaths}</p>
@@ -98,22 +115,22 @@ export default function PlayerCourse () {
         <table>
             <thead>
                 <tr>
-                    <th>
+                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'leaderboard_position'}>
                         Rank
-                    </th>
-                    <th>
+                    </TableHeading>
+                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'time'}>
                         Time
-                    </th>
-                    <th>
+                    </TableHeading>
+                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'deaths'}>
                         Deaths
-                    </th>
-                    <th>
+                    </TableHeading>
+                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'time_achieved'}>
                         Date
-                    </th>
+                    </TableHeading>
                 </tr>
             </thead>
             <tbody>
-                {player_id && course_id ? <PlayerCourseTable player_id={player_id} course_id={Number(course_id)}/> : ''}
+                {player_id && course_id ? <PlayerCourseTable player_id={player_id} course_id={Number(course_id)} sort={sort} direction={direction}/> : ''}
             </tbody>
         </table>
     </>

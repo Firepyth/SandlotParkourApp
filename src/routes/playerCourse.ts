@@ -138,8 +138,8 @@ router.get('/completions/:player_id/:course_id', async function(req, res, next) 
                     "playerId" = ${req.params.player_id}
             ) result
             ORDER BY ${sort ? Prisma.raw(`result.${req.query.sort} ${direction}, result.leaderboard_position`) : Prisma.raw(`result.leaderboard_position ${direction}`)}
-            LIMIT 200
-            OFFSET ${(page - 1) * 200}
+            LIMIT 50
+            OFFSET ${(page - 1) * 50}
             ;
         `;
         if (result.length === 0) {

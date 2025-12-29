@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { toDate } from '../helpers/convert';
+import { toDate, toTitle } from '../helpers/convert';
 
 interface Data {
     course_id: number;
@@ -18,7 +18,7 @@ export default function HomeTable ({ data, type }: { data: Data[], type: string}
 
         return data.map((item) => {
             return <tr key={`${item.course_id}_row`} onClick={() => navigate(`/courses/${item.course_id}`)} className="cursor-pointer">
-                    <td key={`${item.course_id}_name`}>{item.course_name}</td>
+                    <td key={`${item.course_id}_name`}>{toTitle(item.course_name)}</td>
                     <td key={`${item.course_id}_created`}>{toDate(item.course_created)}</td>
                 </tr>
         })

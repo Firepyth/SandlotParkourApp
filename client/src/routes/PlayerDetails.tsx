@@ -1,6 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from "react-router";
-import { toTime } from '../helpers/convert';
+import { toTime, toTitle } from '../helpers/convert';
+import { useState } from 'react';
+import TableHeading from '../components/TableHeading';
 
 interface Player {
     player_name: string;
@@ -20,19 +22,26 @@ interface PlayerTime {
     time_id: number;
 }
 
-const CourseDetailsTable = ({ id }: { id: string }) => {
+const CourseDetailsTable = ({ id, sort, search, direction }: { id: string, sort: string, search: string, direction: string }) => {
     const navigate = useNavigate();
 
     const { data, isPending, error } = useQuery({
         queryKey: [`PlayerDetailsCompletions${id}`],
-        queryFn: (): Promise<PlayerTime[]> => fetch(`${import.meta.env.VITE_API_URL}/players/completions/finished/${id}`).then(r => r.json())
+        queryFn: (): Promise<PlayerTime[]> => fetch(`${import.meta.env.VITE_API_URL}/players/completions/finished/${id}?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
     });
 
     const loadCourses = (data: PlayerTime[]) => {
+        if (data.length === undefined) {
+            return <tr>
+                <td colSpan={5}>
+                    No results for: {search}
+                </td>
+            </tr>
+        }
         return data.map((playerTime: PlayerTime) => {
             return <tr key={playerTime.course_id} onClick={() => navigate(`/players/${id}/${playerTime.course_id}`)} className="cursor-pointer">
                 <td key={`${playerTime.course_id}_name`}>
-                    {playerTime.course_name}
+                    {toTitle(playerTime.course_name)}
                 </td>
                 <td key={`${playerTime.course_id}_rank`}>
                     {playerTime.leaderboard_position}
@@ -72,11 +81,36 @@ const CourseDetailsTable = ({ id }: { id: string }) => {
 
 export default function PlayerDetails () {
     const { id } = useParams();
+    const queryClient = useQueryClient();
+
+    const [sort, setSort] = useState('course_name');
+    const [search, setSearch] = useState('');
+    const [direction, setDirection] = useState('ASC');
+    const [fetchTimeout, setFetchTimeout] = useState(0);
 
     const { data, isPending, error } = useQuery({
         queryKey: [`PlayerDetails${id}`],
         queryFn: (): Promise<Player> => fetch(`${import.meta.env.VITE_API_URL}/players/${id}`).then(r => r.json())
     });
+
+    const handleSort = async (newSort: string) => {
+        if (sort === newSort) {
+            await setDirection(direction === 'ASC' ? 'DESC' : 'ASC');
+        }
+        else {
+            await setDirection('ASC');
+            await setSort(newSort);
+        }
+        queryClient.invalidateQueries({queryKey: [`PlayerDetailsCompletions${id}`]});
+    }
+
+    const handleSearch = async (newSearch: string) => {
+        if (search !== newSearch) {
+            await setSearch(newSearch);
+            clearTimeout(fetchTimeout);
+            setFetchTimeout(setTimeout(async () => queryClient.invalidateQueries({queryKey: [`PlayerDetailsCompletions${id}`]}), 150));
+        }
+    }
 
     if (isPending) return <p>Loading...</p>;
     if (error) return <p>Error retrieving data.</p>;
@@ -87,25 +121,26 @@ export default function PlayerDetails () {
         <p>Total completions: {data.total_completions}</p>
         <p>Total records: {data.total_records}</p>
         <p>Average leaderboard position: {Number(data.avg_position).toFixed(1)}</p>
+        <input className="border-1" type="text" value={search} onChange={(e) => handleSearch(e.target.value)} />
         <table>
             <thead>
                 <tr>
-                    <th>
+                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'course_name'}>
                         Name
-                    </th>
-                    <th>
+                    </TableHeading>
+                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'leaderboard_position'}>
                         Rank
-                    </th>
-                    <th>
+                    </TableHeading>
+                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'fastest_time'}>
                         Time
-                    </th>
-                    <th>
+                    </TableHeading>
+                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'deaths'}>
                         Deaths
-                    </th>
+                    </TableHeading>
                 </tr>
             </thead>
             <tbody>
-                {id ? <CourseDetailsTable id={id}/> : ''}
+                {id ? <CourseDetailsTable id={id} sort={sort} search={search} direction={direction}/> : ''}
             </tbody>
         </table>
     </>

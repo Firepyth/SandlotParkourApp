@@ -1,6 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useNavigate } from "react-router";
-import { toDate, toTime } from '../helpers/convert';
+import { toDate, toTime, toTitle } from '../helpers/convert';
+import TableHeading from '../components/TableHeading';
 
 interface Course {
     course_id: number;
@@ -14,21 +16,54 @@ interface Course {
 
 export default function Courses () {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
+
+    const [sort, setSort] = useState('course_name');
+    const [search, setSearch] = useState('');
+    const [direction, setDirection] = useState('ASC');
+    const [fetchTimeout, setFetchTimeout] = useState(0);
+
     const { data, isPending, error } = useQuery({
         queryKey: ['Courses'],
-        queryFn: (): Promise<Course[]> => fetch(`${import.meta.env.VITE_API_URL}/courses`).then(r => r.json())
+        queryFn: (): Promise<Course[]> => fetch(`${import.meta.env.VITE_API_URL}/courses?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
     });
 
     const handlePlayerNavigate = (e: any, course: Course) => {
         e.stopPropagation();
-        navigate(`/players/${course.fastest_player_id}/${course.course_id}`)
+        navigate(`/players/${course.fastest_player_id}/${course.course_id}`);
+    }
+
+    const handleSort = async (newSort: string) => {
+        if (sort === newSort) {
+            await setDirection(direction === 'ASC' ? 'DESC' : 'ASC');
+        }
+        else {
+            await setDirection('ASC');
+            await setSort(newSort);
+        }
+        queryClient.invalidateQueries({queryKey: ['Courses']});
+    }
+
+    const handleSearch = async (newSearch: string) => {
+        if (search !== newSearch) {
+            await setSearch(newSearch);
+            clearTimeout(fetchTimeout);
+            setFetchTimeout(setTimeout(async () => queryClient.invalidateQueries({queryKey: ['Courses']}), 150));
+        }
     }
 
     const loadCourses = (data: Course[]) => {
+        if (data.length === undefined) {
+            return <tr>
+                <td colSpan={5}>
+                    No results for: {search}
+                </td>
+            </tr>
+        }
         return data.map((course: Course) => {
             return <tr key={course.course_id} onClick={() => navigate(`/courses/${course.course_id}`)} className="cursor-pointer">
                 <td key={`${course.course_id}_name`}>
-                    {course.course_name}
+                    {toTitle(course.course_name)}
                 </td>
                 <td key={`${course.course_id}_created`}>
                     {toDate(course.course_created)}
@@ -65,24 +100,25 @@ export default function Courses () {
 
     return <>
         <h1>Courses</h1>
+        <input className="border-1" type="text" value={search} onChange={(e) => handleSearch(e.target.value)} />
         <table>
             <thead>
                 <tr>
-                    <th>
+                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'course_name'}>
                         Course name
-                    </th>
-                    <th>
+                    </TableHeading>
+                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'course_created'}>
                         Date added
-                    </th>
-                    <th>
+                    </TableHeading>
+                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'avg_time'}>
                         Average time
-                    </th>
-                    <th>
+                    </TableHeading>
+                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'fastest_time'}>
                         Fastest time
-                    </th>
-                    <th>
+                    </TableHeading>
+                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'fastest_player_name'}>
                         Fastest player
-                    </th>
+                    </TableHeading>
                 </tr>
             </thead>
             <tbody>
