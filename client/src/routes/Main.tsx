@@ -36,10 +36,10 @@ export default function Main () {
                 <table>
                     <thead>
                         <tr>
-                            <TableHeading interactive={false}>
+                            <TableHeading>
                                 Course name
                             </TableHeading>
-                            <TableHeading interactive={false}>
+                            <TableHeading>
                                 Date added
                             </TableHeading>
                         </tr>
@@ -52,17 +52,17 @@ export default function Main () {
                         }
                     </tbody>
                 </table>
-                <Link to="/courses">See all</Link>
+                <Link to={{pathname: "/courses", search: "?showRecent=true"}}>See all</Link>
             </div>
             <div>
                 <h2>Top players</h2>
                 <table>
                     <thead>
                         <tr>
-                            <TableHeading interactive={false}>
+                            <TableHeading>
                                 Player name
                             </TableHeading>
-                            <TableHeading interactive={false}>
+                            <TableHeading>
                                 Courses
                             </TableHeading>
                         </tr>
@@ -75,7 +75,7 @@ export default function Main () {
                         }
                     </tbody>
                 </table>
-                <Link to="/players">See all</Link>
+                <Link to={{pathname: "/players", search: "?showTop=true"}}>See all</Link>
             </div>
         </div>
         <Footer />

@@ -1,8 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import TableHeading from '../components/TableHeading';
 import TableCell from '../components/TableCell';
+import Search from '../components/Search';
 
 interface Player {
     player_id: string;
@@ -15,35 +16,17 @@ interface Player {
 export default function Players () {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const [queryParams] = useSearchParams();
 
-    const [sort, setSort] = useState('player_name');
+    const [sort, setSort] = useState(queryParams.get('showTop') === 'true' ? 'completed_courses' : 'player_name');
     const [search, setSearch] = useState('');
-    const [direction, setDirection] = useState('ASC');
+    const [direction, setDirection] = useState(queryParams.get('showTop') === 'true' ? 'DESC' : 'ASC');
     const [fetchTimeout, setFetchTimeout] = useState(0);
 
     const { data, isPending, error } = useQuery({
         queryKey: ['Players'],
         queryFn: (): Promise<Player[]> => fetch(`${import.meta.env.VITE_API_URL}/players?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
     });
-
-    const handleSort = async (newSort: string) => {
-        if (sort === newSort) {
-            await setDirection(direction === 'ASC' ? 'DESC' : 'ASC');
-        }
-        else {
-            await setDirection('ASC');
-            await setSort(newSort);
-        }
-        queryClient.invalidateQueries({queryKey: ['Players']});
-    }
-
-    const handleSearch = async (newSearch: string) => {
-        if (search !== newSearch) {
-            await setSearch(newSearch);
-            clearTimeout(fetchTimeout);
-            setFetchTimeout(setTimeout(async () => queryClient.invalidateQueries({queryKey: ['Players']}), 150));
-        }
-    }
 
     const loadCourses = (data: Player[]) => {
         if (data.length === undefined) {
@@ -88,22 +71,40 @@ export default function Players () {
         </tr>
     </>
 
+    const searchParams = {
+        search,
+        fetchTimeout,
+        setFetchTimeout,
+        setSearch,
+        queryClient,
+        queryKey: 'Courses'
+    }
+
+    const sortParams = {
+        sort,
+        direction,
+        setDirection,
+        setSort,
+        queryClient,
+        queryKey: 'Players'
+    }
+
     return <>
         <h1>Courses</h1>
-        <input className="border-1" type="text" value={search} onChange={(e) => handleSearch(e.target.value)} />
+        <Search searchParams={searchParams}/>
         <table>
             <thead>
                 <tr>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'player_name'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'player_name'}}>
                         Player name
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'completed_courses'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'completed_courses'}}>
                         Completed courses
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'avg_position'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'avg_position'}}>
                         Average placement
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'total_records'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'total_records'}}>
                         Total records
                     </TableHeading>
                 </tr>

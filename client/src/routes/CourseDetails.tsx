@@ -4,6 +4,7 @@ import { toDate, toTime, toTitle } from '../helpers/convert';
 import { useState } from 'react';
 import TableHeading from '../components/TableHeading';
 import TableCell from '../components/TableCell';
+import Search from '../components/Search';
 
 interface Course {
     course_name: string;
@@ -100,27 +101,26 @@ export default function CourseDetails () {
         queryFn: (): Promise<Course> => fetch(`${import.meta.env.VITE_API_URL}/courses/${id}`).then(r => r.json())
     });
 
-    const handleSort = async (newSort: string) => {
-        if (sort === newSort) {
-            await setDirection(direction === 'ASC' ? 'DESC' : 'ASC');
-        }
-        else {
-            await setDirection('ASC');
-            await setSort(newSort);
-        }
-        queryClient.invalidateQueries({queryKey: [`CourseDetailsCompletions${id}`]});
-    }
-
-    const handleSearch = async (newSearch: string) => {
-        if (search !== newSearch) {
-            await setSearch(newSearch);
-            clearTimeout(fetchTimeout);
-            setFetchTimeout(setTimeout(async () => queryClient.invalidateQueries({queryKey: [`CourseDetailsCompletions${id}`]}), 150));
-        }
-    }
-
     if (isPending) return <p>Loading...</p>;
     if (error) return <p>Error retrieving data.</p>;
+
+    const searchParams = {
+        search,
+        fetchTimeout,
+        setFetchTimeout,
+        setSearch,
+        queryClient,
+        queryKey: `CourseDetailsCompletions${id}`
+    }
+
+    const sortParams = {
+        sort,
+        direction,
+        setDirection,
+        setSort,
+        queryClient,
+        queryKey: `CourseDetailsCompletions${id}`
+    }
 
     return <>
         <h1>{toTitle(data.course_name)}</h1>
@@ -136,20 +136,20 @@ export default function CourseDetails () {
             <p>Average first time: {toTime(data.avg_first_time)}</p>
             <p>Average first deaths: {Number(data.avg_first_deaths).toFixed(1)}</p>
         </>}
-        <input className="border-1" type="text" value={search} onChange={(e) => handleSearch(e.target.value)} />
+        <Search searchParams={searchParams}/>
         <table>
             <thead>
                 <tr>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'rank'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'rank'}}>
                         Rank
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'player_name'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'player_name'}}>
                         Name
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'time'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'time'}}>
                         Time
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'deaths'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'deaths'}}>
                         Deaths
                     </TableHeading>
                 </tr>

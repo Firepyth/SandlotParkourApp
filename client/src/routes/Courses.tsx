@@ -1,9 +1,10 @@
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { toDate, toTime, toTitle } from '../helpers/convert';
 import TableHeading from '../components/TableHeading';
 import TableCell from '../components/TableCell';
+import Search from '../components/Search';
 
 interface Course {
     course_id: number;
@@ -18,35 +19,17 @@ interface Course {
 export default function Courses () {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const [queryParams] = useSearchParams();
 
-    const [sort, setSort] = useState('course_name');
+    const [sort, setSort] = useState(queryParams.get('showRecent') === 'true' ? 'course_created' : 'course_name');
     const [search, setSearch] = useState('');
-    const [direction, setDirection] = useState('ASC');
+    const [direction, setDirection] = useState(queryParams.get('showRecent') === 'true' ? 'DESC' : 'ASC');
     const [fetchTimeout, setFetchTimeout] = useState(0);
 
     const { data, isPending, error } = useQuery({
         queryKey: ['Courses'],
         queryFn: (): Promise<Course[]> => fetch(`${import.meta.env.VITE_API_URL}/courses?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
     });
-
-    const handleSort = async (newSort: string) => {
-        if (sort === newSort) {
-            await setDirection(direction === 'ASC' ? 'DESC' : 'ASC');
-        }
-        else {
-            await setDirection('ASC');
-            await setSort(newSort);
-        }
-        queryClient.invalidateQueries({queryKey: ['Courses']});
-    }
-
-    const handleSearch = async (newSearch: string) => {
-        if (search !== newSearch) {
-            await setSearch(newSearch);
-            clearTimeout(fetchTimeout);
-            setFetchTimeout(setTimeout(async () => queryClient.invalidateQueries({queryKey: ['Courses']}), 150));
-        }
-    }
 
     const loadCourses = (data: Course[]) => {
         if (data.length === undefined) {
@@ -94,25 +77,43 @@ export default function Courses () {
         </tr>
     </>
 
+    const searchParams = {
+        search,
+        fetchTimeout,
+        setFetchTimeout,
+        setSearch,
+        queryClient,
+        queryKey: 'Courses'
+    }
+
+    const sortParams = {
+        sort,
+        direction,
+        setDirection,
+        setSort,
+        queryClient,
+        queryKey: 'Courses'
+    }
+
     return <>
         <h1>Courses</h1>
-        <input className="border-1" type="text" value={search} onChange={(e) => handleSearch(e.target.value)} />
+        <Search searchParams={searchParams}/>
         <table>
             <thead>
                 <tr>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'course_name'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'course_name'}}>
                         Course name
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'course_created'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'course_created'}}>
                         Date added
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'avg_time'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'avg_time'}}>
                         Average time
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'fastest_time'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'fastest_time'}}>
                         Fastest time
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'fastest_player_name'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'fastest_player_name'}}>
                         Fastest player
                     </TableHeading>
                 </tr>

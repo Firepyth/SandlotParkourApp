@@ -88,19 +88,17 @@ export default function PlayerCourse () {
         queryFn: (): Promise<PlayerCourse> => fetch(`${import.meta.env.VITE_API_URL}/playercourse/${player_id}/${course_id}`).then(r => r.json())
     });
 
-    const handleSort = async (newSort: string) => {
-        if (sort === newSort) {
-            await setDirection(direction === 'ASC' ? 'DESC' : 'ASC');
-        }
-        else {
-            await setDirection('ASC');
-            await setSort(newSort);
-        }
-        queryClient.invalidateQueries({queryKey: [`PlayerCourseCompletions${player_id}_${course_id}`]});
-    }
-
     if (isPending) return <p>Loading...</p>;
     if (error) return <p>Error retrieving data.</p>;
+
+    const sortParams = {
+        sort,
+        direction,
+        setDirection,
+        setSort,
+        queryClient,
+        queryKey: `PlayerCourseCompletions${player_id}_${course_id}`
+    }
 
     return <>
         <h1 className="flex cursor-pointer" onClick={() => navigate(`/players/${player_id}`)}><img src={`https://mc-heads.net/avatar/${data.player_id}`} alt={data.player_name} width="48px" height="48px"/>{data.player_name}</h1>
@@ -116,16 +114,16 @@ export default function PlayerCourse () {
         <table>
             <thead>
                 <tr>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'leaderboard_position'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'leaderboard_position'}}>
                         Rank
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'time'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'time'}}>
                         Time
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'deaths'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'deaths'}}>
                         Deaths
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'time_achieved'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'time_achieved'}}>
                         Date
                     </TableHeading>
                 </tr>

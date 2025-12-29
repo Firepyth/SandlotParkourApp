@@ -1,20 +1,28 @@
+import type { QueryClient } from "@tanstack/react-query";
+import { handleSort } from "../helpers/handleFilter"
+
 interface TableHeadingProps {
     children: React.ReactNode, 
-    handleSort?: Function, 
-    sort?: string, 
-    direction?: string, 
-    column?: string, 
-    interactive?: boolean
+    sortParams?: {
+        sort: string;
+        newSort: string;
+        direction: string;
+        setDirection: Function;
+        setSort: Function;
+        queryClient: QueryClient;
+        queryKey: string;
+    } | null;
+    column?: string;
 }
 
-export default function TableHeading ({children = '', handleSort = () => {}, sort, direction = '', column = '', interactive = true}: TableHeadingProps) {
-    if (!interactive) {
+export default function TableHeading ({children, sortParams = null}: TableHeadingProps) {
+    if (sortParams === null) {
         return <th>
             {children}
         </th>
     }
-    return <th className="cursor-pointer" onClick={() => handleSort(column)}>
+    return <th className="cursor-pointer" onClick={() => handleSort(sortParams)}>
         {children}
-        <span className="mx-2">{sort !== column ? '-' : direction === 'ASC' ? '⏶' : '⏷'}</span>
+        <span className="mx-2">{sortParams.sort !== sortParams.newSort ? '-' : sortParams.direction === 'ASC' ? '⏶' : '⏷'}</span>
     </th>
 }

@@ -4,6 +4,7 @@ import { toTime, toTitle } from '../helpers/convert';
 import { useState } from 'react';
 import TableHeading from '../components/TableHeading';
 import TableCell from '../components/TableCell';
+import Search from '../components/Search';
 
 interface Player {
     player_name: string;
@@ -94,27 +95,26 @@ export default function PlayerDetails () {
         queryFn: (): Promise<Player> => fetch(`${import.meta.env.VITE_API_URL}/players/${id}`).then(r => r.json())
     });
 
-    const handleSort = async (newSort: string) => {
-        if (sort === newSort) {
-            await setDirection(direction === 'ASC' ? 'DESC' : 'ASC');
-        }
-        else {
-            await setDirection('ASC');
-            await setSort(newSort);
-        }
-        queryClient.invalidateQueries({queryKey: [`PlayerDetailsCompletions${id}`]});
-    }
-
-    const handleSearch = async (newSearch: string) => {
-        if (search !== newSearch) {
-            await setSearch(newSearch);
-            clearTimeout(fetchTimeout);
-            setFetchTimeout(setTimeout(async () => queryClient.invalidateQueries({queryKey: [`PlayerDetailsCompletions${id}`]}), 150));
-        }
-    }
-
     if (isPending) return <p>Loading...</p>;
     if (error) return <p>Error retrieving data.</p>;
+
+    const searchParams = {
+        search,
+        fetchTimeout,
+        setFetchTimeout,
+        setSearch,
+        queryClient,
+        queryKey: 'Courses'
+    }
+
+    const sortParams = {
+        sort,
+        direction,
+        setDirection,
+        setSort,
+        queryClient,
+        queryKey: `PlayerDetailsCompletions${id}`
+    }
 
     return <>
         <h1 className="flex"><img src={`https://mc-heads.net/avatar/${data.player_id}`} alt={data.player_name} width="48px" height="48px"/>{data.player_name}</h1>
@@ -122,20 +122,20 @@ export default function PlayerDetails () {
         <p>Total completions: {data.total_completions}</p>
         <p>Total records: {data.total_records}</p>
         <p>Average leaderboard position: {Number(data.avg_position).toFixed(1)}</p>
-        <input className="border-1" type="text" value={search} onChange={(e) => handleSearch(e.target.value)} />
+        <Search searchParams={searchParams}/>
         <table>
             <thead>
                 <tr>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'course_name'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'course_name'}}>
                         Name
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'leaderboard_position'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'leaderboard_position'}}>
                         Rank
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'fastest_time'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'fastest_time'}}>
                         Time
                     </TableHeading>
-                    <TableHeading handleSort={handleSort} sort={sort} direction={direction} column={'deaths'}>
+                    <TableHeading sortParams={{...sortParams, newSort: 'deaths'}}>
                         Deaths
                     </TableHeading>
                 </tr>
