@@ -1,10 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useParams } from "react-router";
+import { useParams } from "react-router";
 import { toTime, toTitle } from '../helpers/convert';
 import { useState } from 'react';
 import TableHeading from '../components/TableHeading';
 import TableCell from '../components/TableCell';
 import Search from '../components/Search';
+import LoadingMsg from '../components/LoadingMsg';
+import ErrorMsg from '../components/ErrorMsg';
+import TableRow from '../components/TableRow';
 
 interface Player {
     player_name: string;
@@ -24,24 +27,33 @@ interface PlayerTime {
     time_id: number;
 }
 
-const CourseDetailsTable = ({ id, sort, search, direction }: { id: string, sort: string, search: string, direction: string }) => {
-    const navigate = useNavigate();
+const CourseDetailsTable = ({ id, sort, search, direction, category }: { id: string, sort: string, search: string, direction: string, category: string }) => {
 
     const { data, isPending, error } = useQuery({
         queryKey: [`PlayerDetailsCompletions${id}`],
-        queryFn: (): Promise<PlayerTime[]> => fetch(`${import.meta.env.VITE_API_URL}/players/completions/finished/${id}?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
+        queryFn: (): Promise<PlayerTime[]> => fetch(`${import.meta.env.VITE_API_URL}/players/completions/${category}/${id}?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
     });
 
     const loadCourses = (data: PlayerTime[]) => {
         if (data.length === undefined) {
-            return <tr>
-                <td colSpan={5}>
+            return <TableRow>
+                <TableCell colSpan={5}>
                     No results for: {search}
-                </td>
-            </tr>
+                </TableCell>
+            </TableRow>
         }
         return data.map((playerTime: PlayerTime) => {
-            return <tr key={playerTime.course_id} onClick={() => navigate(`/players/${id}/${playerTime.course_id}`)} className="cursor-pointer">
+            if (playerTime.fastest_time === null) {
+                return <TableRow key={playerTime.course_id} route={`/players/${id}/${playerTime.course_id}`} className="cursor-pointer">
+                    <TableCell>
+                        {toTitle(playerTime.course_name)}
+                    </TableCell>
+                    <TableCell colSpan={3} className="text-center">
+                        <i>N/A</i>
+                    </TableCell>
+                </TableRow>
+            }
+            return <TableRow key={playerTime.course_id} route={`/players/${id}/${playerTime.course_id}`} className="cursor-pointer">
                 <TableCell>
                     {toTitle(playerTime.course_name)}
                 </TableCell>
@@ -54,28 +66,12 @@ const CourseDetailsTable = ({ id, sort, search, direction }: { id: string, sort:
                 <TableCell>
                     {playerTime.deaths}
                 </TableCell>
-            </tr>
+            </TableRow>
         });
     }
 
-    const loadingMsg = <>
-        <tr>
-            <td>
-                Loading...
-            </td>
-        </tr>
-    </>
-
-    const errorMsg = <>
-        <tr>
-            <td>
-                Error retrieving data.
-            </td>
-        </tr>
-    </>
-
     return <>
-        {isPending ? loadingMsg : error ? errorMsg :
+        {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4} /> :
             loadCourses(data)
         }
     </>
@@ -88,6 +84,7 @@ export default function PlayerDetails () {
     const [sort, setSort] = useState('course_name');
     const [search, setSearch] = useState('');
     const [direction, setDirection] = useState('ASC');
+    const [category, setCategory] = useState('finished');
     const [fetchTimeout, setFetchTimeout] = useState(0);
 
     const { data, isPending, error } = useQuery({
@@ -98,13 +95,18 @@ export default function PlayerDetails () {
     if (isPending) return <p>Loading...</p>;
     if (error) return <p>Error retrieving data.</p>;
 
+    const handleCategoryChange = async (newCategory: string) => {
+        await setCategory(newCategory);
+        queryClient.invalidateQueries({queryKey: [`PlayerDetailsCompletions${id}`]});
+    }
+
     const searchParams = {
         search,
         fetchTimeout,
         setFetchTimeout,
         setSearch,
         queryClient,
-        queryKey: 'Courses'
+        queryKey: `PlayerDetailsCompletions${id}`
     }
 
     const sortParams = {
@@ -122,10 +124,15 @@ export default function PlayerDetails () {
         <p>Total completions: {data.total_completions}</p>
         <p>Total records: {data.total_records}</p>
         <p>Average leaderboard position: {Number(data.avg_position).toFixed(1)}</p>
+        <select className="block" onChange={e => handleCategoryChange(e.target.value)}>
+            <option value="finished">Finished</option>
+            <option value="unfinished">Unfinished</option>
+            <option value="all">All</option>
+        </select>
         <Search searchParams={searchParams}/>
         <table>
             <thead>
-                <tr>
+                <TableRow>
                     <TableHeading sortParams={{...sortParams, newSort: 'course_name'}}>
                         Name
                     </TableHeading>
@@ -138,10 +145,10 @@ export default function PlayerDetails () {
                     <TableHeading sortParams={{...sortParams, newSort: 'deaths'}}>
                         Deaths
                     </TableHeading>
-                </tr>
+                </TableRow>
             </thead>
             <tbody>
-                {id ? <CourseDetailsTable id={id} sort={sort} search={search} direction={direction}/> : ''}
+                {id ? <CourseDetailsTable id={id} sort={sort} search={search} direction={direction} category={category}/> : ''}
             </tbody>
         </table>
     </>

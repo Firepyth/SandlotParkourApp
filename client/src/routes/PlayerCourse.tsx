@@ -4,6 +4,9 @@ import { toTime, toDate, toTitle } from '../helpers/convert';
 import { useState } from 'react';
 import TableHeading from '../components/TableHeading';
 import TableCell from '../components/TableCell';
+import LoadingMsg from '../components/LoadingMsg';
+import ErrorMsg from '../components/ErrorMsg';
+import TableRow from '../components/TableRow';
 
 interface PlayerCourse {
     leaderboard_position: number;
@@ -35,7 +38,7 @@ const PlayerCourseTable = ({ player_id, course_id, sort, direction }: { player_i
 
     const loadCourses = (data: PlayerCourseTimes[]) => {
         return data.map((playerCourseTime: PlayerCourseTimes) => {
-            return <tr key={playerCourseTime.time_id}>
+            return <TableRow key={playerCourseTime.time_id}>
                 <TableCell>
                     {playerCourseTime.leaderboard_position}
                 </TableCell>
@@ -48,28 +51,12 @@ const PlayerCourseTable = ({ player_id, course_id, sort, direction }: { player_i
                 <TableCell>
                     {toDate(playerCourseTime.time_achieved)}
                 </TableCell>
-            </tr>
+            </TableRow>
         });
     }
 
-    const loadingMsg = <>
-        <tr>
-            <td>
-                Loading...
-            </td>
-        </tr>
-    </>
-
-    const errorMsg = <>
-        <tr>
-            <td>
-                Error retrieving data.
-            </td>
-        </tr>
-    </>
-
     return <>
-        {isPending ? loadingMsg : error ? errorMsg :
+        {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4}/> :
             loadCourses(data)
         }
     </>
@@ -113,7 +100,7 @@ export default function PlayerCourse () {
         <p>Total completions: {data.total_completions}</p>
         <table>
             <thead>
-                <tr>
+                <TableRow>
                     <TableHeading sortParams={{...sortParams, newSort: 'leaderboard_position'}}>
                         Rank
                     </TableHeading>
@@ -126,7 +113,7 @@ export default function PlayerCourse () {
                     <TableHeading sortParams={{...sortParams, newSort: 'time_achieved'}}>
                         Date
                     </TableHeading>
-                </tr>
+                </TableRow>
             </thead>
             <tbody>
                 {player_id && course_id ? <PlayerCourseTable player_id={player_id} course_id={Number(course_id)} sort={sort} direction={direction}/> : ''}

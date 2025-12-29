@@ -4,9 +4,10 @@ interface TableCellProps {
     children: React.ReactNode;
     className?: string;
     route?: string | null;
+    colSpan?: number;
 }
 
-export default function TableCell ({children, className = '', route = null}: TableCellProps) {
+export default function TableCell ({children, className = '', route = null, colSpan = 1}: TableCellProps) {
     const navigate = useNavigate();
 
     const handleNavigate = (e: any, route: string) => {
@@ -14,7 +15,7 @@ export default function TableCell ({children, className = '', route = null}: Tab
         navigate(route);
     }
 
-    return <td className={`${className}`} onClick={route ? (e) => handleNavigate(e, route) : undefined}>
+    return <td className={`${className}`} onClick={route ? (e) => handleNavigate(e, route) : undefined} colSpan={colSpan}>
         {children}
     </td>
 }

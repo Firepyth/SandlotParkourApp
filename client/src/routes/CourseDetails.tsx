@@ -5,6 +5,9 @@ import { useState } from 'react';
 import TableHeading from '../components/TableHeading';
 import TableCell from '../components/TableCell';
 import Search from '../components/Search';
+import TableRow from '../components/TableRow';
+import LoadingMsg from '../components/LoadingMsg';
+import ErrorMsg from '../components/ErrorMsg';
 
 interface Course {
     course_name: string;
@@ -29,8 +32,6 @@ interface CourseTime {
 }
 
 const CourseDetailsTable = ({ id, sort, search, direction }: { id: number, sort: string, search: string, direction: string }) => {
-    const navigate = useNavigate();
-
     const { data, isPending, error } = useQuery({
         queryKey: [`CourseDetailsCompletions${id}`],
         queryFn: (): Promise<CourseTime[]> => fetch(`${import.meta.env.VITE_API_URL}/courses/completions/${id}?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
@@ -38,14 +39,14 @@ const CourseDetailsTable = ({ id, sort, search, direction }: { id: number, sort:
 
     const loadCourses = (data: CourseTime[]) => {
         if (data.length === undefined) {
-            return <tr>
-                <td colSpan={4}>
+            return <TableRow>
+                <TableCell colSpan={4}>
                     No completions found.
-                </td>
-            </tr>
+                </TableCell>
+            </TableRow>
         }
         return data.map((courseTime: CourseTime) => {
-            return <tr key={courseTime.time_id} onClick={() => navigate(`/players/${courseTime.player_id}/${id}`)} className="cursor-pointer">
+            return <TableRow key={courseTime.player_id} route={`/players/${courseTime.player_id}/${id}`} className="cursor-pointer">
                 <TableCell>
                     {courseTime.rank}
                 </TableCell>
@@ -59,28 +60,12 @@ const CourseDetailsTable = ({ id, sort, search, direction }: { id: number, sort:
                 <TableCell>
                     {courseTime.deaths}
                 </TableCell>
-            </tr>
+            </TableRow>
         });
     }
 
-    const loadingMsg = <>
-        <tr>
-            <td colSpan={4}>
-                Loading...
-            </td>
-        </tr>
-    </>
-
-    const errorMsg = <>
-        <tr>
-            <td colSpan={4}>
-                Error retrieving data.
-            </td>
-        </tr>
-    </>
-
     return <>
-        {isPending ? loadingMsg : error ? errorMsg :
+        {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4}/> :
             loadCourses(data)
         }
     </>
@@ -139,7 +124,7 @@ export default function CourseDetails () {
         <Search searchParams={searchParams}/>
         <table>
             <thead>
-                <tr>
+                <TableRow>
                     <TableHeading sortParams={{...sortParams, newSort: 'rank'}}>
                         Rank
                     </TableHeading>
@@ -152,7 +137,7 @@ export default function CourseDetails () {
                     <TableHeading sortParams={{...sortParams, newSort: 'deaths'}}>
                         Deaths
                     </TableHeading>
-                </tr>
+                </TableRow>
             </thead>
             <tbody>
                 <CourseDetailsTable id={Number(id)} sort={sort} search={search} direction={direction}/>

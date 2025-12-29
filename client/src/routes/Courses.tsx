@@ -1,10 +1,13 @@
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { toDate, toTime, toTitle } from '../helpers/convert';
 import TableHeading from '../components/TableHeading';
 import TableCell from '../components/TableCell';
 import Search from '../components/Search';
+import LoadingMsg from '../components/LoadingMsg';
+import ErrorMsg from '../components/ErrorMsg';
+import TableRow from '../components/TableRow';
 
 interface Course {
     course_id: number;
@@ -17,7 +20,6 @@ interface Course {
 }
 
 export default function Courses () {
-    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [queryParams] = useSearchParams();
 
@@ -33,14 +35,14 @@ export default function Courses () {
 
     const loadCourses = (data: Course[]) => {
         if (data.length === undefined) {
-            return <tr>
-                <td colSpan={5}>
+            return <TableRow>
+                <TableCell colSpan={5}>
                     No results for: {search}
-                </td>
-            </tr>
+                </TableCell>
+            </TableRow>
         }
         return data.map((course: Course) => {
-            return <tr key={course.course_id} onClick={() => navigate(`/courses/${course.course_id}`)} className="cursor-pointer">
+            return <TableRow key={course.course_id} route={`/courses/${course.course_id}`} className="cursor-pointer">
                 <TableCell>
                     {toTitle(course.course_name)}
                 </TableCell>
@@ -57,25 +59,9 @@ export default function Courses () {
                     <img src={`https://mc-heads.net/avatar/${course.fastest_player_id}`} alt={course.fastest_player_name} width="24px" height="24px"/>
                     {course.fastest_player_name}
                 </TableCell>
-            </tr>
+            </TableRow>
         });
     }
-
-    const loadingMsg = <>
-        <tr>
-            <td>
-                Loading...
-            </td>
-        </tr>
-    </>
-
-    const errorMsg = <>
-        <tr>
-            <td>
-                Error retrieving data.
-            </td>
-        </tr>
-    </>
 
     const searchParams = {
         search,
@@ -100,7 +86,7 @@ export default function Courses () {
         <Search searchParams={searchParams}/>
         <table>
             <thead>
-                <tr>
+                <TableRow>
                     <TableHeading sortParams={{...sortParams, newSort: 'course_name'}}>
                         Course name
                     </TableHeading>
@@ -116,10 +102,10 @@ export default function Courses () {
                     <TableHeading sortParams={{...sortParams, newSort: 'fastest_player_name'}}>
                         Fastest player
                     </TableHeading>
-                </tr>
+                </TableRow>
             </thead>
             <tbody>
-                {isPending ? loadingMsg : error ? errorMsg :
+                {isPending ? <LoadingMsg colSpan={5}/> : error ? <ErrorMsg colSpan={5}/> :
                     loadCourses(data)
                 }
             </tbody>

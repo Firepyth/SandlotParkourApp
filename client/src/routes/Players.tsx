@@ -1,9 +1,12 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import TableHeading from '../components/TableHeading';
 import TableCell from '../components/TableCell';
 import Search from '../components/Search';
+import LoadingMsg from '../components/LoadingMsg';
+import ErrorMsg from '../components/ErrorMsg';
+import TableRow from '../components/TableRow';
 
 interface Player {
     player_id: string;
@@ -14,7 +17,6 @@ interface Player {
 }
 
 export default function Players () {
-    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [queryParams] = useSearchParams();
 
@@ -30,14 +32,14 @@ export default function Players () {
 
     const loadCourses = (data: Player[]) => {
         if (data.length === undefined) {
-            return <tr>
-                <td colSpan={5}>
+            return <TableRow>
+                <TableCell colSpan={5}>
                     No results for: {search}
-                </td>
-            </tr>
+                </TableCell>
+            </TableRow>
         }
         return data.map((player: Player) => {
-            return <tr key={player.player_id} onClick={() => navigate(`/players/${player.player_id}`)} className="cursor-pointer">
+            return <TableRow key={player.player_id} route={`/players/${player.player_id}`} className="cursor-pointer">
                 <TableCell className="flex">
                     <img src={`https://mc-heads.net/avatar/${player.player_id}`} alt={player.player_name} width="24px" height="24px"/>
                     {player.player_name}
@@ -51,25 +53,9 @@ export default function Players () {
                 <TableCell>
                     {player.total_records}
                 </TableCell>
-            </tr>
+            </TableRow>
         });
     }
-
-    const loadingMsg = <>
-        <tr>
-            <td>
-                Loading...
-            </td>
-        </tr>
-    </>
-
-    const errorMsg = <>
-        <tr>
-            <td>
-                Error retrieving data.
-            </td>
-        </tr>
-    </>
 
     const searchParams = {
         search,
@@ -94,7 +80,7 @@ export default function Players () {
         <Search searchParams={searchParams}/>
         <table>
             <thead>
-                <tr>
+                <TableRow>
                     <TableHeading sortParams={{...sortParams, newSort: 'player_name'}}>
                         Player name
                     </TableHeading>
@@ -107,10 +93,10 @@ export default function Players () {
                     <TableHeading sortParams={{...sortParams, newSort: 'total_records'}}>
                         Total records
                     </TableHeading>
-                </tr>
+                </TableRow>
             </thead>
             <tbody>
-                {isPending ? loadingMsg : error ? errorMsg :
+                {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4}/> :
                     loadCourses(data)
                 }
             </tbody>
