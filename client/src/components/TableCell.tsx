@@ -1,5 +1,3 @@
-import { useNavigate } from "react-router";
-
 interface TableCellProps {
     children: React.ReactNode;
     className?: string;
@@ -7,15 +5,8 @@ interface TableCellProps {
     colSpan?: number;
 }
 
-export default function TableCell ({children, className = '', route = null, colSpan = 1}: TableCellProps) {
-    const navigate = useNavigate();
-
-    const handleNavigate = (e: any, route: string) => {
-        e.stopPropagation();
-        navigate(route);
-    }
-
-    return <td className={`${className}`} onClick={route ? (e) => handleNavigate(e, route) : undefined} colSpan={colSpan}>
+export default function TableCell ({children, className = '', colSpan = 1}: TableCellProps) {
+    return <td className={`${className}`} colSpan={colSpan}>
         {children}
     </td>
 }

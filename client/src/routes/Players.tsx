@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useSearchParams } from "react-router";
+import { useLocation } from "react-router";
 import TableHeading from '../components/TableHeading';
 import TableCell from '../components/TableCell';
 import Search from '../components/Search';
@@ -18,11 +18,11 @@ interface Player {
 
 export default function Players () {
     const queryClient = useQueryClient();
-    const [queryParams] = useSearchParams();
+    const showTop = useLocation().state?.showTop;
 
-    const [sort, setSort] = useState(queryParams.get('showTop') === 'true' ? 'completed_courses' : 'player_name');
+    const [sort, setSort] = useState(showTop === true ? 'completed_courses' : 'player_name');
     const [search, setSearch] = useState('');
-    const [direction, setDirection] = useState(queryParams.get('showTop') === 'true' ? 'DESC' : 'ASC');
+    const [direction, setDirection] = useState(showTop === true ? 'DESC' : 'ASC');
     const [fetchTimeout, setFetchTimeout] = useState(0);
 
     const { data, isPending, error } = useQuery({

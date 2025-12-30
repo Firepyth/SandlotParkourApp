@@ -19,27 +19,6 @@ export default function Main () {
         <p>Basic site description :D</p>
         <div className="flex gap-5">
             <div>
-                <h2>Recently added courses</h2>
-                <table>
-                    <thead>
-                        <TableRow>
-                            <TableHeading>
-                                Course name
-                            </TableHeading>
-                            <TableHeading>
-                                Date added
-                            </TableHeading>
-                        </TableRow>
-                    </thead>
-                    <tbody>
-                        {isPending ? <LoadingMsg colSpan={2}/> : error ? <ErrorMsg colSpan={2}/> :
-                            <HomeTable data={data} type="course" />
-                        }
-                    </tbody>
-                </table>
-                <Link to={{pathname: "/courses", search: "?showRecent=true"}}>See all</Link>
-            </div>
-            <div>
                 <h2>Top players</h2>
                 <table>
                     <thead>
@@ -58,7 +37,28 @@ export default function Main () {
                         }
                     </tbody>
                 </table>
-                <Link to={{pathname: "/players", search: "?showTop=true"}}>See all</Link>
+                <Link to="/players" state={{showTop: true}}>See all</Link>
+            </div>
+            <div>
+                <h2>Recently added courses</h2>
+                <table>
+                    <thead>
+                        <TableRow>
+                            <TableHeading>
+                                Course name
+                            </TableHeading>
+                            <TableHeading>
+                                Date added
+                            </TableHeading>
+                        </TableRow>
+                    </thead>
+                    <tbody>
+                        {isPending ? <LoadingMsg colSpan={2}/> : error ? <ErrorMsg colSpan={2}/> :
+                            <HomeTable data={data} type="course" />
+                        }
+                    </tbody>
+                </table>
+                <Link to="/courses" state={{showRecent: true}}>See all</Link>
             </div>
         </div>
         <Footer />

@@ -1,6 +1,6 @@
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useSearchParams } from "react-router";
+import { useLocation } from "react-router";
 import { toDate, toTime, toTitle } from '../helpers/convert';
 import TableHeading from '../components/TableHeading';
 import TableCell from '../components/TableCell';
@@ -21,11 +21,12 @@ interface Course {
 
 export default function Courses () {
     const queryClient = useQueryClient();
-    const [queryParams] = useSearchParams();
+    const showRecent = useLocation().state?.showRecent;
+    console.log(showRecent);
 
-    const [sort, setSort] = useState(queryParams.get('showRecent') === 'true' ? 'course_created' : 'course_name');
+    const [sort, setSort] = useState(showRecent === true ? 'course_created' : 'course_name');
     const [search, setSearch] = useState('');
-    const [direction, setDirection] = useState(queryParams.get('showRecent') === 'true' ? 'DESC' : 'ASC');
+    const [direction, setDirection] = useState(showRecent === true ? 'DESC' : 'ASC');
     const [fetchTimeout, setFetchTimeout] = useState(0);
 
     const { data, isPending, error } = useQuery({
@@ -55,7 +56,7 @@ export default function Courses () {
                 <TableCell>
                     {toTime(course.fastest_time)}
                 </TableCell>
-                <TableCell className="flex" route={`/players/${course.fastest_player_id}/${course.course_id}`}>
+                <TableCell className="flex">
                     <img src={`https://mc-heads.net/avatar/${course.fastest_player_id}`} alt={course.fastest_player_name} width="24px" height="24px"/>
                     {course.fastest_player_name}
                 </TableCell>
