@@ -117,7 +117,8 @@ router.get('/:course_id', async function(req, res, next) {
                 c.fastest_player_id,
                 d.avg_first_time,
                 d.avg_first_deaths,
-                player.name AS fastest_player_name
+                player.name AS fastest_player_name,
+                e.records
             FROM course
             LEFT JOIN (
                 SElECT
@@ -150,9 +151,33 @@ router.get('/:course_id', async function(req, res, next) {
                     ORDER BY "playerId", achieved
                 )
             ) d ON 1 = 1
+            LEFT JOIN (
+                SELECT
+                    JSON_AGG(
+                        JSON_BUILD_OBJECT(
+                            'time', time,
+                            'time_achieved', time_achieved,
+                            'player_id', player_id,
+                            'player_name', player_name,
+                            'deaths', deaths
+                        )
+                    ) AS records
+                FROM (
+                    SELECT
+                        DISTINCT ON (MIN(time) OVER (ORDER BY achieved))
+                        MIN(time) OVER (ORDER BY achieved) AS time,
+                        achieved AS time_achieved, 
+                        time."playerId" AS player_id,
+                        player.name AS player_name,
+                        deaths
+                    FROM time
+                    JOIN player ON player."playerId" = time."playerId"
+                    WHERE "courseId" = ${req.params.course_id}
+                    ORDER BY MIN(time) OVER (ORDER BY achieved) DESC, achieved
+                )
+            ) e ON 1 = 1
             LEFT JOIN player ON player."playerId" = c.fastest_player_id
             WHERE course."courseId" = ${req.params.course_id}
-            ;
         `;
         if (result.length === 0) {
             return res.status(404).json({ error: `No courses found with the ID ${req.params.course_id}` });
@@ -214,32 +239,6 @@ router.get('/completions/:course_id', async function(req, res, next) {
         `;
         if (result.length === 0) {
             return res.status(404).json({ error: `No players found with the search term ${req.query.search}` });
-        }
-        res.status(200).json(json(result));
-    } catch (err) {
-        console.log(err);
-        return res.status(500).send();
-    }
-});
-
-router.get('/records/:course_id', async function(req, res, next) {
-    try {
-        const result: Record[] = await prisma.$queryRaw`
-            SELECT
-                DISTINCT ON (MIN(time) OVER (ORDER BY achieved))
-                MIN(time) OVER (ORDER BY achieved) AS time,
-                achieved AS time_achieved, 
-                time."playerId" AS player_id,
-                player.name AS player_name,
-                deaths
-            FROM time
-            JOIN player ON player."playerId" = time."playerId"
-            WHERE "courseId" = ${req.params.course_id}
-            ORDER BY MIN(time) OVER (ORDER BY achieved) DESC
-            ;
-        `;
-        if (result.length === 0) {
-            return res.status(404).json({ error: `No courses found with the ID ${req.params.course_id}` });
         }
         res.status(200).json(json(result));
     } catch (err) {

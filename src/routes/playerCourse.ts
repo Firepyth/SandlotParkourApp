@@ -37,7 +37,8 @@ router.get('/:player_id/:course_id', async function(req, res, next) {
                 c.total_completions,
                 d.name AS course_name,
                 player."playerId" AS player_id,
-                player.name AS player_name
+                player.name AS player_name,
+                e.personal_bests
             FROM (
                 SELECT
                     leaderboard_position,
@@ -91,6 +92,28 @@ router.get('/:player_id/:course_id', async function(req, res, next) {
                 FROM course
                 WHERE "courseId" = ${req.params.course_id}
             ) d ON 1 = 1
+            JOIN (
+                SELECT
+                    JSON_AGG (
+                        JSON_BUILD_OBJECT (
+                            'time', time,
+                            'wrong_time', wrong_time,
+                            achieved, achieved
+                        )
+                    ) AS personal_bests
+                FROM (
+                    SELECT
+                        DISTINCT ON (MIN(time) OVER (ORDER BY achieved))
+                        MIN(time) OVER (ORDER BY achieved) AS time,
+                        time AS wrong_time,
+                        achieved
+                    FROM time
+                    WHERE 
+                        "courseId" = 25 AND
+                        "playerId" = '2678f0bfa3c348bcaf7017f2f54d4305'
+                    ORDER BY MIN(time) OVER (ORDER BY achieved) DESC, achieved
+                )
+            ) e ON 1 = 1
             JOIN player ON player."playerId" = ${req.params.player_id}
             ;
         `;

@@ -22,7 +22,6 @@ interface Course {
 export default function Courses () {
     const queryClient = useQueryClient();
     const showRecent = useLocation().state?.showRecent;
-    console.log(showRecent);
 
     const [sort, setSort] = useState(showRecent === true ? 'course_created' : 'course_name');
     const [search, setSearch] = useState('');
