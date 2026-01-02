@@ -6,7 +6,6 @@ This is the beginnings of my Sandlot parkour stats app. More to come
 
 | Endpoint path | Description   |
 |---------------|---------------|
-|GET /api/generalstats|Responds with total courses, players, and combined completions.|
 |GET /api/courses|Responds with stats on all parkour courses. Supports ?direction=, ?sort=, and ?search= for filtering and ?page= for paging.|
 |GET /api/courses/{course_id}|Responds with stats for one parkour course. Includes record progression for the specified course.|
 |GET /api/courses/completions/{course_id}|Responds with all leaderboard times for one parkour course (ignores repeat times from players). Supports ?direction=, ?sort=, and ?search= for filtering and ?page= for paging.|

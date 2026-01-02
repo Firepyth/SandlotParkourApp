@@ -58,40 +58,57 @@ router.get('/', async function(req, res, next) {
         const page = getPage(req.query.page as string);
         
         const result: CourseBulk[] = await prisma.$queryRaw`
-            SELECT *
+            SELECT
+                MIN(matched_courses) AS matched_courses,
+                JSON_AGG (
+                    JSON_BUILD_OBJECT (
+                        'course_id', course_id,
+                        'course_name', course_name,
+                        'course_created', course_created,
+                        'fastest_time', fastest_time,
+                        'fastest_player_id', fastest_player_id,
+                        'fastest_player_name', fastest_player_name,
+                        'avg_time', avg_time
+                    )
+                ) AS courses
             FROM (
                 SELECT 
-                    DISTINCT ON (course."courseId")
-                    course."courseId" AS course_id, 
-                    course.name AS course_name,
-                    created AS course_created, 
-                    time.time AS "fastest_time", 
-                    time."playerId" AS "fastest_player_id", 
-                    player.name AS "fastest_player_name", 
-                    avg_times.avg_time
-                FROM course
-                JOIN time ON time."courseId" = course."courseId"
-                JOIN (
-                    SELECT AVG(p1.time) AS avg_time, p1."courseId"
-                    FROM (
-                        SELECT p1.* 
-                        FROM time p1
-                        JOIN (
-                            SELECT min(achieved) "runDate", CONCAT("courseId", "playerId") "courseId" FROM time GROUP BY CONCAT("courseId", "playerId")
-                        ) AS p2 
-                        ON p1.achieved = p2."runDate"
-                        AND CONCAT(p1."courseId", p1."playerId") = p2."courseId"
-                        ORDER BY "courseId"
-                    ) AS p1
-                    GROUP BY p1."courseId"
-                ) AS avg_times ON course."courseId" = avg_times."courseId"
-                JOIN player ON time."playerId" = player."playerId"
-                ORDER BY course."courseId", time
-            ) result
-            WHERE LOWER(result.course_name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
-            ORDER BY ${sort ? Prisma.raw(`result.${sort} ${direction}, result.course_name ASC`) : Prisma.raw(`result.course_name ${direction}`)}
-            LIMIT 50
-            OFFSET ${(page - 1) * 50}
+                    *,
+                    COUNT(course_id) OVER () AS matched_courses
+                FROM (
+                    SELECT 
+                        DISTINCT ON (course."courseId")
+                        course."courseId" AS course_id,
+                        course.name AS course_name,
+                        created AS course_created,
+                        time.time AS fastest_time,
+                        time."playerId" AS fastest_player_id,
+                        player.name AS fastest_player_name,
+                        avg_times.avg_time
+                    FROM course
+                    LEFT JOIN time ON time."courseId" = course."courseId"
+                    LEFT JOIN (
+                        SELECT AVG(p1.time) AS avg_time, p1."courseId"
+                        FROM (
+                            SELECT p1.* 
+                            FROM time p1
+                            JOIN (
+                                SELECT min(achieved) "runDate", CONCAT("courseId", "playerId") "courseId" FROM time GROUP BY CONCAT("courseId", "playerId")
+                            ) AS p2 
+                            ON p1.achieved = p2."runDate"
+                            AND CONCAT(p1."courseId", p1."playerId") = p2."courseId"
+                            ORDER BY "courseId"
+                        ) AS p1
+                        GROUP BY p1."courseId"
+                    ) AS avg_times ON course."courseId" = avg_times."courseId"
+                    LEFT JOIN player ON time."playerId" = player."playerId"
+                    ORDER BY course."courseId", time
+                ) result
+                WHERE LOWER(result.course_name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
+                ORDER BY ${sort ? Prisma.raw(`result.${sort} ${direction}, result.course_name ASC`) : Prisma.raw(`result.course_name ${direction}`)}
+                LIMIT 50
+                OFFSET ${(page - 1) * 50}
+            )
             ;
         `;
         if (result.length === 0) {
@@ -208,33 +225,53 @@ router.get('/completions/:course_id', async function(req, res, next) {
         const page = getPage(req.query.page as string);
 
         const result: CourseTime[] = await prisma.$queryRaw`
-            SELECT *
+            SELECT
+                matched_completions,
+                JSON_AGG (
+                    JSON_BUILD_OBJECT (
+                        'rank', rank,
+                        'player_id', player_id,
+                        'player_name', player_name,
+                        'time', time,
+                        'deaths', deaths,
+                        'time_id', time_id
+                    )
+                ) AS completions
             FROM (
-                WITH completions AS (
-                    SELECT
-                        DISTINCT ON ("playerId")
-                        "timeId", 
-                        "playerId", 
-                        "time", 
-                        "deaths"
-                    FROM time
-                    WHERE "courseId" = ${req.params.course_id}
-                    ORDER BY "playerId", "time"
-                )
                 SELECT
-                    RANK() OVER (ORDER BY "time") AS rank,
-                    completions."playerId" AS player_id,
-                    player.name AS player_name,
-                    "time",
-                    "deaths",
-                    "timeId" AS time_id
-                FROM completions
-                JOIN player ON player."playerId" = completions."playerId"
-            ) result
-            WHERE LOWER(result.player_name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
-            ORDER BY ${sort ? Prisma.raw(`result.${sort} ${direction}, result.rank ASC`) : Prisma.raw(`result.rank ${direction}`)}
-            LIMIT 50
-            OFFSET ${(page - 1) * 50}
+                    COUNT(player_id) OVER () AS matched_completions,
+                    *
+                FROM (
+                    SELECT *
+                    FROM (
+                        WITH completions AS (
+                            SELECT
+                                DISTINCT ON ("playerId")
+                                "timeId", 
+                                "playerId", 
+                                "time", 
+                                "deaths"
+                            FROM time
+                            WHERE "courseId" = ${req.params.course_id}
+                            ORDER BY "playerId", "time"
+                        )
+                        SELECT
+                            RANK() OVER (ORDER BY "time") AS rank,
+                            completions."playerId" AS player_id,
+                            player.name AS player_name,
+                            time,
+                            deaths,
+                            "timeId" AS time_id
+                        FROM completions
+                        JOIN player ON player."playerId" = completions."playerId"
+                    ) result
+                    WHERE LOWER(result.player_name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
+                    ORDER BY ${sort ? Prisma.raw(`result.${sort} ${direction}, result.rank ASC`) : Prisma.raw(`result.rank ${direction}`)}
+                    LIMIT 50
+                    OFFSET ${(page - 1) * 50}
+                )
+            )
+            GROUP BY matched_completions
             ;
         `;
         if (result.length === 0) {
