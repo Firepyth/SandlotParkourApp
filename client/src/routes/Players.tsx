@@ -16,6 +16,11 @@ interface Player {
     player_name: string;
 }
 
+interface Players {
+    matched_players: number;
+    players: Player[];
+}
+
 export default function Players () {
     const queryClient = useQueryClient();
     const showTop = useLocation().state?.showTop;
@@ -27,11 +32,11 @@ export default function Players () {
 
     const { data, isPending, error } = useQuery({
         queryKey: ['Players'],
-        queryFn: (): Promise<Player[]> => fetch(`${import.meta.env.VITE_API_URL}/players?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
+        queryFn: (): Promise<Players> => fetch(`${import.meta.env.VITE_API_URL}/players?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
     });
 
     const loadCourses = (data: Player[]) => {
-        if (data.length === undefined) {
+        if (data.length === 0) {
             return <TableRow>
                 <TableCell colSpan={5}>
                     No results for: {search}
@@ -63,7 +68,7 @@ export default function Players () {
         setFetchTimeout,
         setSearch,
         queryClient,
-        queryKey: 'Courses'
+        queryKey: 'Players'
     }
 
     const sortParams = {
@@ -97,7 +102,7 @@ export default function Players () {
             </thead>
             <tbody>
                 {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4}/> :
-                    loadCourses(data)
+                    loadCourses(data?.players || [])
                 }
             </tbody>
         </table>

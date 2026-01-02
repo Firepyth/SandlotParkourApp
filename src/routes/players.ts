@@ -246,7 +246,7 @@ router.get('/completions/all/:player_id', async function(req, res, next) {
                         'leaderboard_position', leaderboard_position,
                         'time_id', time_id
                     )
-                )
+                ) AS completions
             FROM (
                 SELECT
                     *,
@@ -336,7 +336,7 @@ router.get('/completions/finished/:player_id', async function(req, res, next) {
                         'leaderboard_position', leaderboard_position,
                         'time_id', time_id
                     )
-                )
+                ) AS completions
             FROM (
                 SELECT
                     *,
@@ -414,7 +414,7 @@ router.get('/completions/unfinished/:player_id', async function(req, res, next) 
                         'leaderboard_position', leaderboard_position,
                         'time_id', time_id
                     )
-                )
+                ) AS completions
             FROM (
                 SELECT
                     *,

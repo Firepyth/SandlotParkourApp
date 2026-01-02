@@ -27,15 +27,20 @@ interface PlayerTime {
     time_id: number;
 }
 
+interface PlayerTimes {
+    matched_courses: number;
+    completions: PlayerTime[];
+}
+
 const CourseDetailsTable = ({ id, sort, search, direction, category }: { id: string, sort: string, search: string, direction: string, category: string }) => {
 
     const { data, isPending, error } = useQuery({
         queryKey: [`PlayerDetailsCompletions${id}`],
-        queryFn: (): Promise<PlayerTime[]> => fetch(`${import.meta.env.VITE_API_URL}/players/completions/${category}/${id}?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
+        queryFn: (): Promise<PlayerTimes> => fetch(`${import.meta.env.VITE_API_URL}/players/completions/${category}/${id}?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
     });
 
     const loadCourses = (data: PlayerTime[]) => {
-        if (data.length === undefined) {
+        if (data.length === 0) {
             return <TableRow>
                 <TableCell colSpan={5}>
                     No results for: {search}
@@ -72,7 +77,7 @@ const CourseDetailsTable = ({ id, sort, search, direction, category }: { id: str
 
     return <>
         {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4} /> :
-            loadCourses(data)
+            loadCourses(data.completions || [])
         }
     </>
 }

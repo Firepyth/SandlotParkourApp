@@ -19,6 +19,11 @@ interface Course {
     avg_time: number;
 }
 
+interface Courses {
+    matched_courses: number;
+    courses: Course[];
+}
+
 export default function Courses () {
     const queryClient = useQueryClient();
     const showRecent = useLocation().state?.showRecent;
@@ -30,11 +35,11 @@ export default function Courses () {
 
     const { data, isPending, error } = useQuery({
         queryKey: ['Courses'],
-        queryFn: (): Promise<Course[]> => fetch(`${import.meta.env.VITE_API_URL}/courses?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
+        queryFn: (): Promise<Courses> => fetch(`${import.meta.env.VITE_API_URL}/courses?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
     });
 
     const loadCourses = (data: Course[]) => {
-        if (data.length === undefined) {
+        if (data.length === 0) {
             return <TableRow>
                 <TableCell colSpan={5}>
                     No results for: {search}
@@ -106,7 +111,7 @@ export default function Courses () {
             </thead>
             <tbody>
                 {isPending ? <LoadingMsg colSpan={5}/> : error ? <ErrorMsg colSpan={5}/> :
-                    loadCourses(data)
+                    loadCourses(data.courses || [])
                 }
             </tbody>
         </table>
