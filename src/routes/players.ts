@@ -133,7 +133,7 @@ router.get('/', async function(req, res, next) {
         if (result.length === 0) {
             return req.query.search ? res.status(404).json({ error: `No players found with the search term ${req.query.search}` }) : res.status(404).json({ error: `No players found.` });
         }
-        res.status(200).json(json(result));
+        res.status(200).json(json(result[0]));
     } catch (err) {
         console.log(err);
         return res.status(500).send();
@@ -298,7 +298,7 @@ router.get('/completions/all/:player_id', async function(req, res, next) {
         if (result.length === 0) {
             return req.query.search ? res.status(404).json({ error: `No courses found with the search term ${req.query.search}` }) : res.status(404).json({ error: `No courses found.` });
         }
-        res.status(200).json(json(result));
+        res.status(200).json(json(result[0]));
     } catch (err) {
         console.log(err);
         return res.status(500).send();
@@ -376,7 +376,7 @@ router.get('/completions/finished/:player_id', async function(req, res, next) {
         if (result.length === 0) {
             return req.query.search ? res.status(404).json({ error: `No courses found with the search term ${req.query.search}` }) : res.status(404).json({ error: `No courses found.` });
         }
-        res.status(200).json(json(result));
+        res.status(200).json(json(result[0]));
     } catch (err) {
         console.log(err);
         return res.status(500).send();
@@ -443,7 +443,7 @@ router.get('/completions/unfinished/:player_id', async function(req, res, next) 
         if (result.length === 0) {
             return req.query.search ? res.status(404).json({ error: `No courses found with the search term ${req.query.search}` }) : res.status(404).json({ error: `No courses found.` });
         }
-        res.status(200).json(json(result));
+        res.status(200).json(json(result[0]));
     } catch (err) {
         console.log(err);
         return res.status(500).send();
