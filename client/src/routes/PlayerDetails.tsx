@@ -8,6 +8,7 @@ import Search from '../components/Search';
 import LoadingMsg from '../components/LoadingMsg';
 import ErrorMsg from '../components/ErrorMsg';
 import TableRow from '../components/TableRow';
+import Pager from '../components/Pager';
 
 interface Player {
     player_name: string;
@@ -32,12 +33,26 @@ interface PlayerTimes {
     completions: PlayerTime[];
 }
 
-const CourseDetailsTable = ({ id, sort, search, direction, category }: { id: string, sort: string, search: string, direction: string, category: string }) => {
+const CourseDetailsTable = ({ id }: { id: string }) => {
+    const queryClient = useQueryClient();
+
+    const [sort, setSort] = useState('course_name');
+    const [search, setSearch] = useState('');
+    const [direction, setDirection] = useState('ASC');
+    const [category, setCategory] = useState('finished');
+    const [page, setPage] = useState(1);
+    const [fetchTimeout, setFetchTimeout] = useState(0);
 
     const { data, isPending, error } = useQuery({
         queryKey: [`PlayerDetailsCompletions${id}`],
-        queryFn: (): Promise<PlayerTimes> => fetch(`${import.meta.env.VITE_API_URL}/players/completions/${category}/${id}?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
+        queryFn: (): Promise<PlayerTimes> => fetch(`${import.meta.env.VITE_API_URL}/players/completions/${category}/${id}?sort=${sort}&search=${search}&direction=${direction}&page=${page}`).then(r => r.json())
     });
+
+    const handleCategoryChange = async (newCategory: string) => {
+        await setCategory(newCategory);
+        await setPage(1);
+        queryClient.invalidateQueries({queryKey: [`PlayerDetailsCompletions${id}`]});
+    }
 
     const loadCourses = (data: PlayerTime[]) => {
         if (data.length === 0) {
@@ -75,40 +90,11 @@ const CourseDetailsTable = ({ id, sort, search, direction, category }: { id: str
         });
     }
 
-    return <>
-        {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4} /> :
-            loadCourses(data.completions || [])
-        }
-    </>
-}
-
-export default function PlayerDetails () {
-    const { id } = useParams();
-    const queryClient = useQueryClient();
-
-    const [sort, setSort] = useState('course_name');
-    const [search, setSearch] = useState('');
-    const [direction, setDirection] = useState('ASC');
-    const [category, setCategory] = useState('finished');
-    const [fetchTimeout, setFetchTimeout] = useState(0);
-
-    const { data, isPending, error } = useQuery({
-        queryKey: [`PlayerDetails${id}`],
-        queryFn: (): Promise<Player> => fetch(`${import.meta.env.VITE_API_URL}/players/${id}`).then(r => r.json())
-    });
-
-    if (isPending) return <p>Loading...</p>;
-    if (error) return <p>Error retrieving data.</p>;
-
-    const handleCategoryChange = async (newCategory: string) => {
-        await setCategory(newCategory);
-        queryClient.invalidateQueries({queryKey: [`PlayerDetailsCompletions${id}`]});
-    }
-
     const searchParams = {
         search,
         fetchTimeout,
         setFetchTimeout,
+        setPage,
         setSearch,
         queryClient,
         queryKey: `PlayerDetailsCompletions${id}`
@@ -118,17 +104,22 @@ export default function PlayerDetails () {
         sort,
         direction,
         setDirection,
+        setPage,
         setSort,
         queryClient,
         queryKey: `PlayerDetailsCompletions${id}`
     }
 
+    const pagerParams = {
+        page,
+        setPage,
+        fetchTimeout,
+        queryClient,
+        queryKey: `PlayerDetailsCompletions${id}`,
+        maxItems: data?.matched_courses
+    }
+
     return <>
-        <h1 className="flex"><img src={`https://mc-heads.net/avatar/${data.player_id}`} alt={data.player_name} width="48px" height="48px"/>{data.player_name}</h1>
-        <p>Completed courses: {data.completed_courses}</p>
-        <p>Total completions: {data.total_completions}</p>
-        <p>Total records: {data.total_records}</p>
-        <p>Average leaderboard position: {Number(data.avg_position).toFixed(1)}</p>
         <select className="block" onChange={e => handleCategoryChange(e.target.value)}>
             <option value="finished">Finished</option>
             <option value="unfinished">Unfinished</option>
@@ -153,8 +144,34 @@ export default function PlayerDetails () {
                 </TableRow>
             </thead>
             <tbody>
-                {id ? <CourseDetailsTable id={id} sort={sort} search={search} direction={direction} category={category}/> : ''}
+                {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4} /> :
+                    loadCourses(data.completions || [])
+                }
             </tbody>
         </table>
+        {isPending ? '' : error ? '' :
+            <Pager pagerParams={pagerParams}/>
+        }
+    </>
+}
+
+export default function PlayerDetails () {
+    const { id } = useParams();
+
+    const { data, isPending, error } = useQuery({
+        queryKey: [`PlayerDetails${id}`],
+        queryFn: (): Promise<Player> => fetch(`${import.meta.env.VITE_API_URL}/players/${id}`).then(r => r.json())
+    });
+
+    if (isPending) return <p>Loading...</p>;
+    if (error) return <p>Error retrieving data.</p>;
+
+    return <>
+        <h1 className="flex"><img src={`https://mc-heads.net/avatar/${data.player_id}`} alt={data.player_name} width="48px" height="48px"/>{data.player_name}</h1>
+        <p>Completed courses: {data.completed_courses}</p>
+        <p>Total completions: {data.total_completions}</p>
+        <p>Total records: {data.total_records}</p>
+        <p>Average leaderboard position: {Number(data.avg_position).toFixed(1)}</p>
+        {id ? <CourseDetailsTable id={id}/> : ''}
     </>
 }

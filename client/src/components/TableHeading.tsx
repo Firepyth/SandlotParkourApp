@@ -11,6 +11,7 @@ interface TableHeadingProps {
         setSort: Function;
         queryClient: QueryClient;
         queryKey: string;
+        setPage: Function;
     } | null;
     column?: string;
 }

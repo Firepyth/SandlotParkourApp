@@ -7,6 +7,7 @@ import Search from '../components/Search';
 import LoadingMsg from '../components/LoadingMsg';
 import ErrorMsg from '../components/ErrorMsg';
 import TableRow from '../components/TableRow';
+import Pager from '../components/Pager';
 
 interface Player {
     player_id: string;
@@ -28,11 +29,12 @@ export default function Players () {
     const [sort, setSort] = useState(showTop === true ? 'completed_courses' : 'player_name');
     const [search, setSearch] = useState('');
     const [direction, setDirection] = useState(showTop === true ? 'DESC' : 'ASC');
+    const [page, setPage] = useState(1);
     const [fetchTimeout, setFetchTimeout] = useState(0);
 
     const { data, isPending, error } = useQuery({
         queryKey: ['Players'],
-        queryFn: (): Promise<Players> => fetch(`${import.meta.env.VITE_API_URL}/players?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
+        queryFn: (): Promise<Players> => fetch(`${import.meta.env.VITE_API_URL}/players?sort=${sort}&search=${search}&direction=${direction}&page=${page}`).then(r => r.json())
     });
 
     const loadCourses = (data: Player[]) => {
@@ -67,17 +69,28 @@ export default function Players () {
         fetchTimeout,
         setFetchTimeout,
         setSearch,
+        setPage,
         queryClient,
         queryKey: 'Players'
     }
 
     const sortParams = {
         sort,
+        setPage,
         direction,
         setDirection,
         setSort,
         queryClient,
         queryKey: 'Players'
+    }
+
+    const pagerParams = {
+        page,
+        setPage,
+        fetchTimeout,
+        queryClient,
+        queryKey: 'Players',
+        maxItems: data?.matched_players
     }
 
     return <>
@@ -106,5 +119,8 @@ export default function Players () {
                 }
             </tbody>
         </table>
+        {isPending ? '' : error ? '' :
+            <Pager pagerParams={pagerParams}/>
+        }
     </>
 }

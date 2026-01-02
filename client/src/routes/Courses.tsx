@@ -8,6 +8,7 @@ import Search from '../components/Search';
 import LoadingMsg from '../components/LoadingMsg';
 import ErrorMsg from '../components/ErrorMsg';
 import TableRow from '../components/TableRow';
+import Pager from '../components/Pager';
 
 interface Course {
     course_id: number;
@@ -31,11 +32,12 @@ export default function Courses () {
     const [sort, setSort] = useState(showRecent === true ? 'course_created' : 'course_name');
     const [search, setSearch] = useState('');
     const [direction, setDirection] = useState(showRecent === true ? 'DESC' : 'ASC');
+    const [page, setPage] = useState(1);
     const [fetchTimeout, setFetchTimeout] = useState(0);
 
     const { data, isPending, error } = useQuery({
         queryKey: ['Courses'],
-        queryFn: (): Promise<Courses> => fetch(`${import.meta.env.VITE_API_URL}/courses?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
+        queryFn: (): Promise<Courses> => fetch(`${import.meta.env.VITE_API_URL}/courses?sort=${sort}&search=${search}&direction=${direction}&page=${page}`).then(r => r.json())
     });
 
     const loadCourses = (data: Course[]) => {
@@ -70,6 +72,7 @@ export default function Courses () {
 
     const searchParams = {
         search,
+        setPage,
         fetchTimeout,
         setFetchTimeout,
         setSearch,
@@ -79,11 +82,21 @@ export default function Courses () {
 
     const sortParams = {
         sort,
+        setPage,
         direction,
         setDirection,
         setSort,
         queryClient,
         queryKey: 'Courses'
+    }
+
+    const pagerParams = {
+        page,
+        setPage,
+        fetchTimeout,
+        queryClient,
+        queryKey: 'Courses',
+        maxItems: data?.matched_courses
     }
 
     return <>
@@ -115,5 +128,8 @@ export default function Courses () {
                 }
             </tbody>
         </table>
+        {isPending ? '' : error ? '' :
+            <Pager pagerParams={pagerParams}/>
+        }
     </>
 }

@@ -8,6 +8,7 @@ import Search from '../components/Search';
 import TableRow from '../components/TableRow';
 import LoadingMsg from '../components/LoadingMsg';
 import ErrorMsg from '../components/ErrorMsg';
+import Pager from '../components/Pager';
 
 interface Course {
     course_name: string;
@@ -36,10 +37,18 @@ interface CourseTimes {
     completions: CourseTime[];
 }
 
-const CourseDetailsTable = ({ id, sort, search, direction }: { id: number, sort: string, search: string, direction: string }) => {
+const CourseDetailsTable = ({ id }: { id: number }) => {
+    const queryClient = useQueryClient();
+
+    const [sort, setSort] = useState('rank');
+    const [search, setSearch] = useState('');
+    const [direction, setDirection] = useState('ASC');
+    const [page, setPage] = useState(1);
+    const [fetchTimeout, setFetchTimeout] = useState(0);
+
     const { data, isPending, error } = useQuery({
         queryKey: [`CourseDetailsCompletions${id}`],
-        queryFn: (): Promise<CourseTimes> => fetch(`${import.meta.env.VITE_API_URL}/courses/completions/${id}?sort=${sort}&search=${search}&direction=${direction}`).then(r => r.json())
+        queryFn: (): Promise<CourseTimes> => fetch(`${import.meta.env.VITE_API_URL}/courses/completions/${id}?sort=${sort}&search=${search}&direction=${direction}&page=${page}`).then(r => r.json())
     });
 
     const loadCourses = (data: CourseTime[]) => {
@@ -69,33 +78,9 @@ const CourseDetailsTable = ({ id, sort, search, direction }: { id: number, sort:
         });
     }
 
-    return <>
-        {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4}/> :
-            loadCourses(data.completions || [])
-        }
-    </>
-}
-
-export default function CourseDetails () {
-    const navigate = useNavigate();
-    const queryClient = useQueryClient();
-    const { id } = useParams();
-
-    const [sort, setSort] = useState('rank');
-    const [search, setSearch] = useState('');
-    const [direction, setDirection] = useState('ASC');
-    const [fetchTimeout, setFetchTimeout] = useState(0);
-
-    const { data, isPending, error } = useQuery({
-        queryKey: [`CourseDetails${id}`],
-        queryFn: (): Promise<Course> => fetch(`${import.meta.env.VITE_API_URL}/courses/${id}`).then(r => r.json())
-    });
-
-    if (isPending) return <p>Loading...</p>;
-    if (error) return <p>Error retrieving data.</p>;
-
     const searchParams = {
         search,
+        setPage,
         fetchTimeout,
         setFetchTimeout,
         setSearch,
@@ -105,6 +90,7 @@ export default function CourseDetails () {
 
     const sortParams = {
         sort,
+        setPage,
         direction,
         setDirection,
         setSort,
@@ -112,20 +98,16 @@ export default function CourseDetails () {
         queryKey: `CourseDetailsCompletions${id}`
     }
 
+    const pagerParams = {
+        page,
+        setPage,
+        fetchTimeout,
+        queryClient,
+        queryKey: `CourseDetailsCompletions${id}`,
+        maxItems: data?.matched_completions
+    }
+
     return <>
-        <h1>{toTitle(data.course_name)}</h1>
-        <p>Created: {toDate(data.course_created)}</p>
-        {data.total_completions === null ? <p>No completions found.</p> : <>
-            <p>Total completions: {data.total_completions}</p>
-            <p>Unique completions: {data.unique_completions}</p>
-            <p>Fastest time: {toTime(data.fastest_time)}</p>
-            <p>Fastest deaths: {data.fastest_deaths}</p>
-            <p onClick={() => navigate(`/players/${data.fastest_player_id}/${id}`)} className="flex cursor-pointer">
-                Fastest player: <img src={`https://mc-heads.net/avatar/${data.fastest_player_id}`} alt={data.fastest_player_name} width="24px" height="24px"/>{data.fastest_player_name}
-            </p>
-            <p>Average first time: {toTime(data.avg_first_time)}</p>
-            <p>Average first deaths: {Number(data.avg_first_deaths).toFixed(1)}</p>
-        </>}
         <Search searchParams={searchParams}/>
         <table>
             <thead>
@@ -145,8 +127,43 @@ export default function CourseDetails () {
                 </TableRow>
             </thead>
             <tbody>
-                <CourseDetailsTable id={Number(id)} sort={sort} search={search} direction={direction}/>
+                {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4}/> :
+                    loadCourses(data.completions || [])
+                }
             </tbody>
         </table>
+        {isPending ? '' : error ? '' :
+            <Pager pagerParams={pagerParams}/>
+        }
+    </>
+}
+
+export default function CourseDetails () {
+    const navigate = useNavigate();
+    const { id } = useParams();
+
+    const { data, isPending, error } = useQuery({
+        queryKey: [`CourseDetails${id}`],
+        queryFn: (): Promise<Course> => fetch(`${import.meta.env.VITE_API_URL}/courses/${id}`).then(r => r.json())
+    });
+
+    if (isPending) return <p>Loading...</p>;
+    if (error) return <p>Error retrieving data.</p>;
+
+    return <>
+        <h1>{toTitle(data.course_name)}</h1>
+        <p>Created: {toDate(data.course_created)}</p>
+        {data.total_completions === null ? <p>No completions found.</p> : <>
+            <p>Total completions: {data.total_completions}</p>
+            <p>Unique completions: {data.unique_completions}</p>
+            <p>Fastest time: {toTime(data.fastest_time)}</p>
+            <p>Fastest deaths: {data.fastest_deaths}</p>
+            <p onClick={() => navigate(`/players/${data.fastest_player_id}/${id}`)} className="flex cursor-pointer">
+                Fastest player: <img src={`https://mc-heads.net/avatar/${data.fastest_player_id}`} alt={data.fastest_player_name} width="24px" height="24px"/>{data.fastest_player_name}
+            </p>
+            <p>Average first time: {toTime(data.avg_first_time)}</p>
+            <p>Average first deaths: {Number(data.avg_first_deaths).toFixed(1)}</p>
+        </>}
+        <CourseDetailsTable id={Number(id)}/>
     </>
 }

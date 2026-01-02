@@ -267,9 +267,9 @@ router.get('/completions/:course_id', async function(req, res, next) {
                     ) result
                     WHERE LOWER(result.player_name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
                     ORDER BY ${sort ? Prisma.raw(`result.${sort} ${direction}, result.rank ASC`) : Prisma.raw(`result.rank ${direction}`)}
-                    LIMIT 50
-                    OFFSET ${(page - 1) * 50}
                 )
+                LIMIT 50
+                OFFSET ${(page - 1) * 50}
             )
             GROUP BY matched_completions
             ;
