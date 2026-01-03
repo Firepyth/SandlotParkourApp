@@ -4,7 +4,7 @@ export default function NavBar () {
     return <>
         <header className="flex justify-between">
             <div>
-                <Link to="/">Logo</Link>
+                <Link to="/">Sandlot PK</Link>
             </div>
             <nav>
                 <Link to="/">Home</Link>

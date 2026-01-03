@@ -1,23 +1,14 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { toTime, toTitle } from '../helpers/convert';
-import { useState } from 'react';
-import TableHeading from '../components/TableHeading';
-import TableCell from '../components/TableCell';
-import Search from '../components/Search';
-import LoadingMsg from '../components/LoadingMsg';
-import ErrorMsg from '../components/ErrorMsg';
-import TableRow from '../components/TableRow';
-import Pager from '../components/Pager';
-
-interface Player {
-    player_name: string;
-    player_id: string;
-    completed_courses: number;
-    total_completions: number;
-    total_records: number;
-    avg_position: number;
-}
+import { useEffect, useState } from 'react';
+import TableHeading from './TableHeading';
+import TableCell from './TableCell';
+import Search from './Search';
+import LoadingMsg from './LoadingMsg';
+import ErrorMsg from './ErrorMsg';
+import TableRow from './TableRow';
+import Pager from './Pager';
 
 interface PlayerTime {
     course_name: string;
@@ -30,12 +21,15 @@ interface PlayerTime {
 
 interface PlayerTimes {
     matched_courses: number;
+    player_name: string;
     completions: PlayerTime[];
 }
 
-const CourseDetailsTable = ({ id }: { id: string }) => {
+export const PlayerDetailsTable = () => {
+    const [queryParams] = useSearchParams();
     const queryClient = useQueryClient();
 
+    const [id, setId] = useState('');
     const [sort, setSort] = useState('course_name');
     const [search, setSearch] = useState('');
     const [direction, setDirection] = useState('ASC');
@@ -43,9 +37,22 @@ const CourseDetailsTable = ({ id }: { id: string }) => {
     const [page, setPage] = useState(1);
     const [fetchTimeout, setFetchTimeout] = useState(0);
 
+    useEffect(() => {
+        setId(queryParams.get('playerId') || '');
+        setSort('course_name');
+        setSearch('');
+        setDirection('ASC');
+        setCategory('finished');
+        setPage(1);
+        queryClient.invalidateQueries({queryKey: [`PlayerDetailsCompletions${id}`]});
+    }, [queryParams]);
+
     const { data, isPending, error } = useQuery({
         queryKey: [`PlayerDetailsCompletions${id}`],
-        queryFn: (): Promise<PlayerTimes> => fetch(`${import.meta.env.VITE_API_URL}/players/completions/${category}/${id}?sort=${sort}&search=${search}&direction=${direction}&page=${page}`).then(r => r.json())
+        queryFn: (): Promise<PlayerTimes> => {
+            if (id === '') return new Promise((resolve) => resolve({matched_courses: -1, player_name: '[Player name]', completions: []}));
+            return fetch(`${import.meta.env.VITE_API_URL}/players/completions/${category}/${id}?sort=${sort}&search=${search}&direction=${direction}&page=${page}`).then(r => r.json())
+        }
     });
 
     const handleCategoryChange = async (newCategory: string) => {
@@ -55,6 +62,13 @@ const CourseDetailsTable = ({ id }: { id: string }) => {
     }
 
     const loadCourses = (data: PlayerTime[]) => {
+        if (id === '') {
+            return <TableRow>
+                <TableCell colSpan={5}>
+                    Select a player to view completed courses.
+                </TableCell>
+            </TableRow>
+        }
         if (data.length === 0) {
             return <TableRow>
                 <TableCell colSpan={5}>
@@ -62,7 +76,8 @@ const CourseDetailsTable = ({ id }: { id: string }) => {
                 </TableCell>
             </TableRow>
         }
-        return data.map((playerTime: PlayerTime) => {
+        return data.map((playerTime: PlayerTime, ) => {
+            if (playerTime.course_name === null) return;
             if (playerTime.fastest_time === null) {
                 return <TableRow key={playerTime.course_id} route={`/players/${id}/${playerTime.course_id}`} className="cursor-pointer">
                     <TableCell>
@@ -75,10 +90,10 @@ const CourseDetailsTable = ({ id }: { id: string }) => {
             }
             return <TableRow key={playerTime.course_id} route={`/players/${id}/${playerTime.course_id}`} className="cursor-pointer">
                 <TableCell>
-                    {toTitle(playerTime.course_name)}
+                    {playerTime.leaderboard_position}
                 </TableCell>
                 <TableCell>
-                    {playerTime.leaderboard_position}
+                    {toTitle(playerTime.course_name)}
                 </TableCell>
                 <TableCell>
                     {toTime(playerTime.fastest_time)}
@@ -120,20 +135,24 @@ const CourseDetailsTable = ({ id }: { id: string }) => {
     }
 
     return <>
-        <select className="block" onChange={e => handleCategoryChange(e.target.value)}>
-            <option value="finished">Finished</option>
-            <option value="unfinished">Unfinished</option>
-            <option value="all">All</option>
-        </select>
-        <Search searchParams={searchParams}/>
+        <img src={id !== '' ? `https://mc-heads.net/avatar/${id}` : undefined} alt={isPending || error ? '' : data.player_name} width="64px" height="64px"/>
+        <h2>{isPending || error ? '[Player name]' : data.player_name}</h2>
+        <div className="flex gap-5">
+            <Search searchParams={searchParams}/>
+            <select className="block" onChange={e => handleCategoryChange(e.target.value)}>
+                <option value="finished">Finished</option>
+                <option value="unfinished">Unfinished</option>
+                <option value="all">All</option>
+            </select>
+        </div>
         <table>
             <thead>
                 <TableRow>
                     <TableHeading sortParams={{...sortParams, newSort: 'course_name'}}>
-                        Name
+                        Rank
                     </TableHeading>
                     <TableHeading sortParams={{...sortParams, newSort: 'leaderboard_position'}}>
-                        Rank
+                        Course name
                     </TableHeading>
                     <TableHeading sortParams={{...sortParams, newSort: 'fastest_time'}}>
                         Time
@@ -149,29 +168,8 @@ const CourseDetailsTable = ({ id }: { id: string }) => {
                 }
             </tbody>
         </table>
-        {isPending ? '' : error ? '' :
+        {isPending || error || data.matched_courses === -1 ? '' : 
             <Pager pagerParams={pagerParams}/>
         }
-    </>
-}
-
-export default function PlayerDetails () {
-    const { id } = useParams();
-
-    const { data, isPending, error } = useQuery({
-        queryKey: [`PlayerDetails${id}`],
-        queryFn: (): Promise<Player> => fetch(`${import.meta.env.VITE_API_URL}/players/${id}`).then(r => r.json())
-    });
-
-    if (isPending) return <p>Loading...</p>;
-    if (error) return <p>Error retrieving data.</p>;
-
-    return <>
-        <h1 className="flex"><img src={`https://mc-heads.net/avatar/${data.player_id}`} alt={data.player_name} width="48px" height="48px"/>{data.player_name}</h1>
-        <p>Completed courses: {data.completed_courses}</p>
-        <p>Total completions: {data.total_completions}</p>
-        <p>Total records: {data.total_records}</p>
-        <p>Average leaderboard position: {Number(data.avg_position).toFixed(1)}</p>
-        {id ? <CourseDetailsTable id={id}/> : ''}
     </>
 }

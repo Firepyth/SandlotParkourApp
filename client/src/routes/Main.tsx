@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import HomeTable from '../components/HomeTable';
 import { Link } from "react-router";
-import Footer from '../components/Footer';
 import TableHeading from '../components/TableHeading';
 import ErrorMsg from '../components/ErrorMsg';
 import LoadingMsg from '../components/LoadingMsg';
@@ -14,53 +13,57 @@ export default function Main () {
     });
 
     return <>
-        <h1>Main Title</h1>
-        <h2>About</h2>
-        <p>Basic site description :D</p>
+        <h1><strong>The Sandlot</strong> Parkour Rankings</h1>
         <div className="flex gap-5">
             <div>
-                <h2>Top players</h2>
-                <table>
-                    <thead>
-                        <TableRow>
-                            <TableHeading>
-                                Player name
-                            </TableHeading>
-                            <TableHeading>
-                                Courses
-                            </TableHeading>
-                        </TableRow>
-                    </thead>
-                    <tbody>
-                        {isPending ? <LoadingMsg colSpan={2}/> : error ? <ErrorMsg colSpan={2}/> :
-                            <HomeTable data={data} type="player" />
-                        }
-                    </tbody>
-                </table>
-                <Link to="/players" state={{showTop: true}}>See all</Link>
+                <h2>About</h2>
+                <p>Basic site description :D</p>
+                <a href="https://www.sandlotminecraft.com/pages/about/" className="text-[#00f]">Learn more about the Sandlot</a>
             </div>
-            <div>
-                <h2>Recently added courses</h2>
-                <table>
-                    <thead>
-                        <TableRow>
-                            <TableHeading>
-                                Course name
-                            </TableHeading>
-                            <TableHeading>
-                                Date added
-                            </TableHeading>
-                        </TableRow>
-                    </thead>
-                    <tbody>
-                        {isPending ? <LoadingMsg colSpan={2}/> : error ? <ErrorMsg colSpan={2}/> :
-                            <HomeTable data={data} type="course" />
-                        }
-                    </tbody>
-                </table>
-                <Link to="/courses" state={{showRecent: true}}>See all</Link>
+            <div className="flex gap-5">
+                <div>
+                    <h2>Top players</h2>
+                    <table>
+                        <thead>
+                            <TableRow>
+                                <TableHeading>
+                                    Player name
+                                </TableHeading>
+                                <TableHeading>
+                                    Courses Completed
+                                </TableHeading>
+                            </TableRow>
+                        </thead>
+                        <tbody>
+                            {isPending ? <LoadingMsg colSpan={2}/> : error ? <ErrorMsg colSpan={2}/> :
+                                <HomeTable data={data} type="player" />
+                            }
+                        </tbody>
+                    </table>
+                    <Link to="/players" state={{showTop: true}}>View more</Link>
+                </div>
+                <div>
+                    <h2>Recently courses</h2>
+                    <table>
+                        <thead>
+                            <TableRow>
+                                <TableHeading>
+                                    Course name
+                                </TableHeading>
+                                <TableHeading>
+                                    Date added
+                                </TableHeading>
+                            </TableRow>
+                        </thead>
+                        <tbody>
+                            {isPending ? <LoadingMsg colSpan={2}/> : error ? <ErrorMsg colSpan={2}/> :
+                                <HomeTable data={data} type="course" />
+                            }
+                        </tbody>
+                    </table>
+                    <Link to="/courses" state={{showRecent: true}}>View more</Link>
+                </div>
             </div>
         </div>
-        <Footer />
     </>
 }

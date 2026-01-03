@@ -20,6 +20,7 @@ export default function Pager ({pagerParams: {page, setPage, fetchTimeout = null
                 queryClient.invalidateQueries({queryKey: [queryKey]});
             }
         }}>&larr;</button>
+        <span className={`inline-block text-center`} style={{minWidth: `${Math.floor(Math.log10(maxItems) + 1) * 3 + 5}ch`}}>{(page - 1) * 50 + 1}-{Math.min(page * 50, maxItems || Infinity)} of {maxItems}</span>
         <button className={`cursor-pointer${page * 50 > maxItems ? ' text-[#0008] pointer-events-none': ''}`} onClick={async () => {
             if (page * 50 <= maxItems) {
                 await setPage(page + 1);
@@ -27,6 +28,5 @@ export default function Pager ({pagerParams: {page, setPage, fetchTimeout = null
                 queryClient.invalidateQueries({queryKey: [queryKey]});
             }
         }}>&rarr;</button>
-        <p>Showing results from {(page - 1) * 50 + 1} to {Math.min(page * 50, maxItems || Infinity)} out of {maxItems}</p>
     </>
 }

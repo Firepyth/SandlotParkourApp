@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useLocation } from "react-router";
+import { useLocation, useSearchParams } from "react-router";
 import TableHeading from '../components/TableHeading';
 import TableCell from '../components/TableCell';
 import Search from '../components/Search';
@@ -8,6 +8,7 @@ import LoadingMsg from '../components/LoadingMsg';
 import ErrorMsg from '../components/ErrorMsg';
 import TableRow from '../components/TableRow';
 import Pager from '../components/Pager';
+import { PlayerDetailsTable } from '../components/PlayerDetailsTable';
 
 interface Player {
     player_id: string;
@@ -23,6 +24,7 @@ interface Players {
 }
 
 export default function Players () {
+    const [queryParams] = useSearchParams();
     const queryClient = useQueryClient();
     const showTop = useLocation().state?.showTop;
 
@@ -46,7 +48,7 @@ export default function Players () {
             </TableRow>
         }
         return data.map((player: Player) => {
-            return <TableRow key={player.player_id} route={`/players/${player.player_id}`} className="cursor-pointer">
+            return <TableRow key={player.player_id} route={`/players?playerId=${player.player_id}`} className={`cursor-pointer${queryParams.get('playerId') === player.player_id ? ' bg-[#ddd]' : ''}`}>
                 <TableCell className="flex">
                     <img src={`https://mc-heads.net/avatar/${player.player_id}`} alt={player.player_name} width="24px" height="24px"/>
                     {player.player_name}
@@ -94,33 +96,40 @@ export default function Players () {
     }
 
     return <>
-        <h1>Courses</h1>
-        <Search searchParams={searchParams}/>
-        <table>
-            <thead>
-                <TableRow>
-                    <TableHeading sortParams={{...sortParams, newSort: 'player_name'}}>
-                        Player name
-                    </TableHeading>
-                    <TableHeading sortParams={{...sortParams, newSort: 'completed_courses'}}>
-                        Completed courses
-                    </TableHeading>
-                    <TableHeading sortParams={{...sortParams, newSort: 'avg_position'}}>
-                        Average placement
-                    </TableHeading>
-                    <TableHeading sortParams={{...sortParams, newSort: 'total_records'}}>
-                        Total records
-                    </TableHeading>
-                </TableRow>
-            </thead>
-            <tbody>
-                {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4}/> :
-                    loadCourses(data?.players || [])
+        <h1>Players</h1>
+        <div className="flex gap-5">
+            <div>
+                <Search searchParams={searchParams}/>
+                <table>
+                    <thead>
+                        <TableRow>
+                            <TableHeading sortParams={{...sortParams, newSort: 'player_name'}}>
+                                Player name
+                            </TableHeading>
+                            <TableHeading sortParams={{...sortParams, newSort: 'completed_courses'}}>
+                                Courses completed
+                            </TableHeading>
+                            <TableHeading sortParams={{...sortParams, newSort: 'avg_position'}}>
+                                Average rank
+                            </TableHeading>
+                            <TableHeading sortParams={{...sortParams, newSort: 'total_records'}}>
+                                Number of records
+                            </TableHeading>
+                        </TableRow>
+                    </thead>
+                    <tbody>
+                        {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4}/> :
+                            loadCourses(data?.players || [])
+                        }
+                    </tbody>
+                </table>
+                {isPending ? '' : error ? '' :
+                    <Pager pagerParams={pagerParams}/>
                 }
-            </tbody>
-        </table>
-        {isPending ? '' : error ? '' :
-            <Pager pagerParams={pagerParams}/>
-        }
+            </div>
+            <div>
+                <PlayerDetailsTable />
+            </div>
+        </div>
     </>
 }
