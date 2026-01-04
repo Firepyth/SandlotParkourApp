@@ -1,1 +1,24 @@
+@font-face {
+    font-family: 'Minecraft';
+    src: url('./assets/fonts/Minecraft-Regular.woff2') format('woff2'),
+        url('./assets/fonts/Minecraft-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Rubik';
+    src: url('./assets/fonts/Rubik-Regular.woff2') format('woff2'),
+        url('./assets/fonts/Rubik-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 @import "tailwindcss";
+
+@theme {
+    --font-minecraft: Minecraft, "sans-serif";
+    --font-rubik: Rubik, "sans-serif";
+}

@@ -1,5 +1,5 @@
-import TableCell from "./TableCell";
-import TableRow from "./TableRow";
+import TableCell from "./stylePresets/TableCell";
+import TableRow from "./stylePresets/TableRow";
 
 interface ErrorProps {
     colSpan?: number;

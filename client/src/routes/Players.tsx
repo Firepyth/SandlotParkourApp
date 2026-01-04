@@ -1,14 +1,15 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useLocation, useSearchParams } from "react-router";
-import TableHeading from '../components/TableHeading';
-import TableCell from '../components/TableCell';
+import TableHeading from '../components/stylePresets/TableHeading';
+import TableCell from '../components/stylePresets/TableCell';
 import Search from '../components/Search';
 import LoadingMsg from '../components/LoadingMsg';
 import ErrorMsg from '../components/ErrorMsg';
-import TableRow from '../components/TableRow';
+import TableRow from '../components/stylePresets/TableRow';
 import Pager from '../components/Pager';
 import { PlayerDetailsTable } from '../components/PlayerDetailsTable';
+import { PlayerImg } from '../components/stylePresets/presetStyles';
 
 interface Player {
     player_id: string;
@@ -49,8 +50,8 @@ export default function Players () {
         }
         return data.map((player: Player) => {
             return <TableRow key={player.player_id} route={`/players?playerId=${player.player_id}`} className={`cursor-pointer${queryParams.get('playerId') === player.player_id ? ' bg-[#ddd]' : ''}`}>
-                <TableCell className="flex">
-                    <img src={`https://mc-heads.net/avatar/${player.player_id}`} alt={player.player_name} width="24px" height="24px"/>
+                <TableCell className="flex min-w-[16ch] items-center">
+                    <PlayerImg player_id={player.player_id} player_name={player.player_name}/>
                     {player.player_name}
                 </TableCell>
                 <TableCell>
@@ -99,7 +100,7 @@ export default function Players () {
         <h1>Players</h1>
         <div className="flex gap-5">
             <div>
-                <Search searchParams={searchParams}/>
+                <Search searchParams={searchParams} id="player-search"/>
                 <table>
                     <thead>
                         <TableRow>

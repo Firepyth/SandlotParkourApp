@@ -1,11 +1,11 @@
 import { useState } from "react";
 import Search from "./Search";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import TableRow from "./TableRow";
-import TableHeading from "./TableHeading";
+import TableRow from "./stylePresets/TableRow";
+import TableHeading from "./stylePresets/TableHeading";
 import LoadingMsg from "./LoadingMsg";
 import ErrorMsg from "./ErrorMsg";
-import TableCell from "./TableCell";
+import TableCell from "./stylePresets/TableCell";
 import { toTitle } from "../helpers/convert";
 
 interface SearchResult {
@@ -94,7 +94,7 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
     }
 
     return <div className="absolute left-0 right-0 w-[400px] top-20 mx-auto bg-white" onClick={(e) => e.stopPropagation()}>
-        <Search searchParams={searchParams}/>
+        <Search searchParams={searchParams} autofocus={true} id="global-search"/>
         <div className="flex gap-5">
             <table>
                 <thead>

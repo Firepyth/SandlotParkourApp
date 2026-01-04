@@ -2,12 +2,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from "react-router";
 import { toTime, toDate, toTitle } from '../helpers/convert';
 import { useState } from 'react';
-import TableHeading from '../components/TableHeading';
-import TableCell from '../components/TableCell';
+import TableHeading from '../components/stylePresets/TableHeading';
+import TableCell from '../components/stylePresets/TableCell';
 import LoadingMsg from '../components/LoadingMsg';
 import ErrorMsg from '../components/ErrorMsg';
-import TableRow from '../components/TableRow';
+import TableRow from '../components/stylePresets/TableRow';
 import Pager from '../components/Pager';
+import { PlayerImg } from '../components/stylePresets/presetStyles';
 
 interface PlayerCourse {
     leaderboard_position: number;
@@ -125,7 +126,7 @@ export default function PlayerCourse () {
     return <>
         <h1>Player Stats by Course</h1>
         <h2 className="cursor-pointer" onClick={() => navigate(`/courses/${course_id}`)}>{toTitle(data.course_name)}</h2>
-        <h3 className="flex cursor-pointer" onClick={() => navigate(`/players/${player_id}`)}><img src={`https://mc-heads.net/avatar/${data.player_id}`} alt={data.player_name} width="24px" height="24px"/>{data.player_name}</h3>
+        <h3 className="flex cursor-pointer" onClick={() => navigate(`/players/${player_id}`)}><PlayerImg player_id={data.player_id} player_name={data.player_name}/>{data.player_name}</h3>
         <table>
             <tr>
                 <td>Highest rank:</td>

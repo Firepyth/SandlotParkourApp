@@ -2,13 +2,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from "react-router";
 import { toDate, toTime, toTitle } from '../helpers/convert';
 import { useState } from 'react';
-import TableHeading from '../components/TableHeading';
-import TableCell from '../components/TableCell';
+import TableHeading from '../components/stylePresets/TableHeading';
+import TableCell from '../components/stylePresets/TableCell';
 import Search from '../components/Search';
-import TableRow from '../components/TableRow';
+import TableRow from '../components/stylePresets/TableRow';
 import LoadingMsg from '../components/LoadingMsg';
 import ErrorMsg from '../components/ErrorMsg';
 import Pager from '../components/Pager';
+import { PlayerImg } from '../components/stylePresets/presetStyles';
 
 interface Course {
     course_name: string;
@@ -64,8 +65,8 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
                 <TableCell>
                     {courseTime.rank}
                 </TableCell>
-                <TableCell className="flex">
-                    <img src={`https://mc-heads.net/avatar/${courseTime.player_id}`} alt={courseTime.player_name} width="24px" height="24px"/>
+                <TableCell className="flex min-w-[16ch] items-center">
+                    <PlayerImg player_id={courseTime.player_id} player_name={courseTime.player_name}/>
                     {courseTime.player_name}
                 </TableCell>
                 <TableCell>
@@ -108,7 +109,7 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
     }
 
     return <>
-        <Search searchParams={searchParams}/>
+        <Search searchParams={searchParams} id="course-player-search"/>
         <table>
             <thead>
                 <TableRow>
@@ -171,10 +172,9 @@ export default function CourseDetails () {
             </tr>
             <tr>
                 <td onClick={data.total_completions ? () => navigate(`/players/${data.fastest_player_id}/${id}`) : undefined} className="flex cursor-pointer">
-                    <img 
-                        src={data.total_completions ? `https://mc-heads.net/avatar/${data.fastest_player_id}` : undefined}
-                        alt={data.total_completions ? data.fastest_player_name : ''}
-                        width="24px" height="24px"/>
+                    <PlayerImg 
+                        player_id={data.total_completions ? data.fastest_player_id : undefined}
+                        player_name={data.total_completions ? data.fastest_player_name : ''}/>
                     {data.total_completions ? data.fastest_player_name : '–'}
                 </td>
                 <td>{data.total_completions ? toTime(data.fastest_time) : '00:00:00.000'}</td>

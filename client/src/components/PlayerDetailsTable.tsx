@@ -2,13 +2,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from "react-router";
 import { toTime, toTitle } from '../helpers/convert';
 import { useEffect, useState } from 'react';
-import TableHeading from './TableHeading';
-import TableCell from './TableCell';
+import TableHeading from './stylePresets/TableHeading';
+import TableCell from './stylePresets/TableCell';
 import Search from './Search';
 import LoadingMsg from './LoadingMsg';
 import ErrorMsg from './ErrorMsg';
-import TableRow from './TableRow';
+import TableRow from './stylePresets/TableRow';
 import Pager from './Pager';
+import { PlayerImg } from './stylePresets/presetStyles';
 
 interface PlayerTime {
     course_name: string;
@@ -142,10 +143,10 @@ export const PlayerDetailsTable = () => {
     }
 
     return <>
-        <img src={id !== '' ? `https://mc-heads.net/avatar/${id}` : undefined} alt={isPending || error ? '' : data.player_name} width="64px" height="64px"/>
+        <PlayerImg player_id={id !== '' ? id : undefined} player_name={isPending || error ? '' : data.player_name} className="w-[4rem] h-[4rem]"/>
         <h2>{isPending || error ? '[Player name]' : data.player_name}</h2>
         <div className="flex gap-5">
-            <Search searchParams={searchParams}/>
+            <Search searchParams={searchParams} id="player-course-search"/>
             <label htmlFor="completed">Completed</label>
             <input type="checkbox" id="completed" onChange={() => handleCategoryChange("completed")} checked={category.completed}/>
             <label htmlFor="uncompleted">Uncompleted</label>

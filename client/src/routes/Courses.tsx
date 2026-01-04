@@ -2,13 +2,14 @@ import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useLocation } from "react-router";
 import { toDate, toTime, toTitle } from '../helpers/convert';
-import TableHeading from '../components/TableHeading';
-import TableCell from '../components/TableCell';
+import TableHeading from '../components/stylePresets/TableHeading';
+import TableCell from '../components/stylePresets/TableCell';
 import Search from '../components/Search';
 import LoadingMsg from '../components/LoadingMsg';
 import ErrorMsg from '../components/ErrorMsg';
-import TableRow from '../components/TableRow';
+import TableRow from '../components/stylePresets/TableRow';
 import Pager from '../components/Pager';
+import { PlayerImg } from '../components/stylePresets/presetStyles';
 
 interface Course {
     course_id: number;
@@ -62,8 +63,8 @@ export default function Courses () {
                 <TableCell>
                     {toTime(course.fastest_time)}
                 </TableCell>
-                <TableCell className="flex">
-                    <img src={`https://mc-heads.net/avatar/${course.fastest_player_id}`} alt={course.fastest_player_name} width="24px" height="24px"/>
+                <TableCell className="flex min-w-[16ch] items-center">
+                    <PlayerImg player_id={course.fastest_player_id} player_name={course.fastest_player_name}/>
                     {course.fastest_player_name}
                 </TableCell>
             </TableRow>
@@ -103,7 +104,7 @@ export default function Courses () {
         <h1>Courses</h1>
         <div className="flex gap-5">
             <div>
-                <Search searchParams={searchParams}/>
+                <Search searchParams={searchParams} id="course-search"/>
                 <table>
                     <thead>
                         <TableRow>
@@ -164,7 +165,7 @@ export default function Courses () {
                     </tr>
                 </table>
                 <div>
-                    <Search />
+                    <Search id="" />
                     <table>
                         <thead>
                             <TableRow>

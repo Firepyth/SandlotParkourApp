@@ -7,9 +7,9 @@ function App() {
   const [showSearch, setShowSearch] = useState(false);
 
   return (
-    <div onClick={() => showSearch === true ? setShowSearch(false) : ''}>
+    <div className="bg-[#333333] text-[#ffffff] font-rubik, text-[100%]/[1.5rem] h-[100vh]" onClick={() => showSearch === true ? setShowSearch(false) : ''}>
       <NavBar showSearch={showSearch} setShowSearch={setShowSearch} />
-      <main>
+      <main className="max-w-[75rem] mx-auto">
         <Outlet />
       </main>
       <Footer />

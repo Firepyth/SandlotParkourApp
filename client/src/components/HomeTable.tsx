@@ -1,6 +1,7 @@
 import { toDate, toTitle } from '../helpers/convert';
-import TableCell from "./TableCell";
-import TableRow from "./TableRow";
+import { PlayerImg } from './stylePresets/presetStyles';
+import TableCell from "./stylePresets/TableCell";
+import TableRow from "./stylePresets/TableRow";
 
 interface Data {
     course_id: number;
@@ -26,9 +27,9 @@ export default function HomeTable ({ data, type }: { data: Data[], type: string}
         data = data.filter((item) => item.player_id !== null);
 
         return data.map((item) => {
-            return <TableRow key={item.player_id} route={`/players/${item.player_id}`} className="cursor-pointer">
-                    <TableCell className="flex">
-                        <img src={`https://mc-heads.net/avatar/${item.player_id}`} alt={item.player_name} width="24px" height="24px"/>
+            return <TableRow key={item.player_id} route={`/players?playerId=${item.player_id}`} className="cursor-pointer">
+                    <TableCell className="flex min-w-[16ch] items-center">
+                        <PlayerImg player_id={item.player_id} player_name={item.player_name}/>
                         {item.player_name}
                     </TableCell>
                     <TableCell>{item.completed_courses}</TableCell>

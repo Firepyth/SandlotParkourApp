@@ -1,5 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { handleSort } from "../helpers/handleFilter"
+import { handleSort } from "../../helpers/handleFilter"
 
 interface TableHeadingProps {
     children: React.ReactNode, 
@@ -17,7 +17,7 @@ interface TableHeadingProps {
 }
 
 export default function TableHeading ({children, sortParams = null, fakeSort = false}: TableHeadingProps) {
-    const classes = ''
+    const classes = 'border-b-[2px] border-[#404040] pb-[.5rem] text-left'
     if (fakeSort) {
         return <th className={classes}>
             {children}
