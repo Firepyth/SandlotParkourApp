@@ -33,7 +33,7 @@ export const PlayerDetailsTable = () => {
     const [sort, setSort] = useState('course_name');
     const [search, setSearch] = useState('');
     const [direction, setDirection] = useState('ASC');
-    const [category, setCategory] = useState('finished');
+    const [category, setCategory] = useState({completed: true, uncompleted: false});
     const [page, setPage] = useState(1);
     const [fetchTimeout, setFetchTimeout] = useState(0);
 
@@ -42,21 +42,28 @@ export const PlayerDetailsTable = () => {
         setSort('course_name');
         setSearch('');
         setDirection('ASC');
-        setCategory('finished');
+        setCategory({completed: true, uncompleted: false});
         setPage(1);
         queryClient.invalidateQueries({queryKey: [`PlayerDetailsCompletions${id}`]});
     }, [queryParams]);
+
+    const apiCategory = category.completed && category.uncompleted ? "all" : category.completed ? "finished" : category.uncompleted ? "unfinished" : ""
 
     const { data, isPending, error } = useQuery({
         queryKey: [`PlayerDetailsCompletions${id}`],
         queryFn: (): Promise<PlayerTimes> => {
             if (id === '') return new Promise((resolve) => resolve({matched_courses: -1, player_name: '[Player name]', completions: []}));
-            return fetch(`${import.meta.env.VITE_API_URL}/players/completions/${category}/${id}?sort=${sort}&search=${search}&direction=${direction}&page=${page}`).then(r => r.json())
+            return fetch(`${import.meta.env.VITE_API_URL}/players/completions/${apiCategory}/${id}?sort=${sort}&search=${search}&direction=${direction}&page=${page}`).then(r => r.json())
         }
     });
 
-    const handleCategoryChange = async (newCategory: string) => {
-        await setCategory(newCategory);
+    const handleCategoryChange = async (checkboxCategory: string) => {
+        if (checkboxCategory === "completed") {
+            await setCategory(category.uncompleted === false && category.completed === true ? {uncompleted: true, completed: false} : {...category, completed: !category.completed});
+        }
+        else {
+            await setCategory(category.uncompleted === true && category.completed === false ? {uncompleted: false, completed: true} : {...category, uncompleted: !category.uncompleted});
+        }
         await setPage(1);
         queryClient.invalidateQueries({queryKey: [`PlayerDetailsCompletions${id}`]});
     }
@@ -139,11 +146,10 @@ export const PlayerDetailsTable = () => {
         <h2>{isPending || error ? '[Player name]' : data.player_name}</h2>
         <div className="flex gap-5">
             <Search searchParams={searchParams}/>
-            <select className="block" onChange={e => handleCategoryChange(e.target.value)}>
-                <option value="finished">Finished</option>
-                <option value="unfinished">Unfinished</option>
-                <option value="all">All</option>
-            </select>
+            <label htmlFor="completed">Completed</label>
+            <input type="checkbox" id="completed" onChange={() => handleCategoryChange("completed")} checked={category.completed}/>
+            <label htmlFor="uncompleted">Uncompleted</label>
+            <input type="checkbox" id="uncompleted" onChange={() => handleCategoryChange("uncompleted")} checked={category.uncompleted}/>
         </div>
         <table>
             <thead>
