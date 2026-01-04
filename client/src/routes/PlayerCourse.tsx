@@ -123,16 +123,30 @@ export default function PlayerCourse () {
     if (error) return <p>Error retrieving data.</p>;
 
     return <>
-        <h1 className="flex cursor-pointer" onClick={() => navigate(`/players/${player_id}`)}><img src={`https://mc-heads.net/avatar/${data.player_id}`} alt={data.player_name} width="48px" height="48px"/>{data.player_name}</h1>
+        <h1>Player Stats by Course</h1>
         <h2 className="cursor-pointer" onClick={() => navigate(`/courses/${course_id}`)}>{toTitle(data.course_name)}</h2>
-        <p>Highest leaderboard position: {data.leaderboard_position}</p>
-        <p>Fastest time: {toTime(data.fastest_time)}</p>
-        <p>Fastest deaths: {data.fastest_deaths}</p>
-        <p>First time: {toTime(data.first_time)}</p>
-        <p>First deaths: {data.first_deaths}</p>
-        <p>Average time: {toTime(data.avg_time)}</p>
-        <p>Average deaths: {Number(data.avg_deaths).toFixed(1)}</p>
-        <p>Total completions: {data.total_completions}</p>
+        <h3 className="flex cursor-pointer" onClick={() => navigate(`/players/${player_id}`)}><img src={`https://mc-heads.net/avatar/${data.player_id}`} alt={data.player_name} width="24px" height="24px"/>{data.player_name}</h3>
+        <table>
+            <tr>
+                <td>Highest rank:</td>
+                <td>{data.leaderboard_position}</td>
+            </tr>
+            <tr>
+                <td>Fastest time:</td>
+                <td>{toTime(data.fastest_time)}</td>
+                <td>({data.fastest_deaths} deaths)</td>
+            </tr>
+            <tr>
+                <td>Average time:</td>
+                <td>{toTime(data.avg_time)}</td>
+                <td>({Number(data.avg_deaths).toFixed(1)} deaths)</td>
+            </tr>
+            <tr>
+                <td>First time:</td>
+                <td>{toTime(data.first_time)}</td>
+                <td>({data.first_deaths} deaths)</td>
+            </tr>
+        </table>
         {player_id && course_id ? <PlayerCourseTable player_id={player_id} course_id={Number(course_id)} total_completions={data.total_completions}/> : ''}
     </>
 }

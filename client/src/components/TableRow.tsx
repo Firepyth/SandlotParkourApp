@@ -4,12 +4,18 @@ interface TableCellProps {
     children: React.ReactNode;
     className?: string;
     route?: string | null;
+    setShowSearch?: Function | null;
 }
 
-export default function TableRow ({children, className = '', route = null}: TableCellProps) {
+export default function TableRow ({children, className = '', route = null, setShowSearch = null}: TableCellProps) {
     const navigate = useNavigate();
 
-    return <tr className={`${className}`} onClick={route ? () => navigate(route) : undefined}>
+    const handleNavigate = (route: string) => {
+        setShowSearch ? setShowSearch(false) : '';
+        navigate(route)
+    }
+
+    return <tr className={`${className}`} onClick={route ? () => {handleNavigate(route)} : undefined}>
         {children}
     </tr>
 }

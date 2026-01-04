@@ -13,8 +13,11 @@ interface SearchParams {
     };
 }
 
-export default function Search ({searchParams}: SearchParams) {
-    return <input className="border-1" type="text" value={searchParams.search} onChange={async (e) => {
-        handleSearch({...searchParams, newSearch: e.target.value});
-    }} />
+export default function Search ({searchParams = 0}: SearchParams | {searchParams?: 0}) {
+    if (searchParams !== 0) {
+        return <input className="border-1" type="text" value={searchParams.search} onChange={async (e) => {
+            handleSearch({...searchParams, newSearch: e.target.value});
+        }} />
+    }
+    return <input className="border-1 pointer-events-none" type="text" />
 }

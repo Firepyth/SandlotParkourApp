@@ -151,19 +151,43 @@ export default function CourseDetails () {
     if (error) return <p>Error retrieving data.</p>;
 
     return <>
-        <h1>{toTitle(data.course_name)}</h1>
-        <p>Created: {toDate(data.course_created)}</p>
-        {data.total_completions === null ? <p>No completions found.</p> : <>
-            <p>Total completions: {data.total_completions}</p>
-            <p>Unique completions: {data.unique_completions}</p>
-            <p>Fastest time: {toTime(data.fastest_time)}</p>
-            <p>Fastest deaths: {data.fastest_deaths}</p>
-            <p onClick={() => navigate(`/players/${data.fastest_player_id}/${id}`)} className="flex cursor-pointer">
-                Fastest player: <img src={`https://mc-heads.net/avatar/${data.fastest_player_id}`} alt={data.fastest_player_name} width="24px" height="24px"/>{data.fastest_player_name}
-            </p>
-            <p>Average first time: {toTime(data.avg_first_time)}</p>
-            <p>Average first deaths: {Number(data.avg_first_deaths).toFixed(1)}</p>
-        </>}
+        <h1>Course Stats</h1>
+        <h2>{toTitle(data.course_name)}</h2>
+        <table>
+            <tr>
+                <td>Date added:</td>
+                <td>{toDate(data.course_created)}</td>
+            </tr>
+            <tr>
+                <td>Total completions:</td>
+                <td>{data.total_completions ? data.total_completions : '–'}</td>
+            </tr>
+            <tr>
+                <td>Players completed:</td>
+                <td>{data.total_completions ? data.unique_completions : '–'}</td>
+            </tr>
+            <tr>
+                <td colSpan={3}>Fastest player:</td>
+            </tr>
+            <tr>
+                <td onClick={data.total_completions ? () => navigate(`/players/${data.fastest_player_id}/${id}`) : undefined} className="flex cursor-pointer">
+                    <img 
+                        src={data.total_completions ? `https://mc-heads.net/avatar/${data.fastest_player_id}` : undefined}
+                        alt={data.total_completions ? data.fastest_player_name : ''}
+                        width="24px" height="24px"/>
+                    {data.total_completions ? data.fastest_player_name : '–'}
+                </td>
+                <td>{data.total_completions ? toTime(data.fastest_time) : '00:00:00.000'}</td>
+                <td>({data.total_completions ? data.fastest_deaths : '–'} deaths)</td>
+            </tr>
+            <tr>
+                <td>Average first time:</td>
+                <td>{data.total_completions ? toTime(data.avg_first_time) : '00:00:00.000'}</td>
+                <td>({data.total_completions ? Number(data.avg_first_deaths).toFixed(1) : '–'} deaths)</td>
+            </tr>
+        </table>
+        
+        
         <CourseDetailsTable id={Number(id)}/>
     </>
 }

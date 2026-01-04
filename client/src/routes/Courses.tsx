@@ -101,35 +101,93 @@ export default function Courses () {
 
     return <>
         <h1>Courses</h1>
-        <Search searchParams={searchParams}/>
-        <table>
-            <thead>
-                <TableRow>
-                    <TableHeading sortParams={{...sortParams, newSort: 'course_name'}}>
-                        Course name
-                    </TableHeading>
-                    <TableHeading sortParams={{...sortParams, newSort: 'course_created'}}>
-                        Date added
-                    </TableHeading>
-                    <TableHeading sortParams={{...sortParams, newSort: 'avg_time'}}>
-                        Average time
-                    </TableHeading>
-                    <TableHeading sortParams={{...sortParams, newSort: 'fastest_time'}}>
-                        Fastest time
-                    </TableHeading>
-                    <TableHeading sortParams={{...sortParams, newSort: 'fastest_player_name'}}>
-                        Fastest player
-                    </TableHeading>
-                </TableRow>
-            </thead>
-            <tbody>
-                {isPending ? <LoadingMsg colSpan={5}/> : error ? <ErrorMsg colSpan={5}/> :
-                    loadCourses(data.courses || [])
+        <div className="flex gap-5">
+            <div>
+                <Search searchParams={searchParams}/>
+                <table>
+                    <thead>
+                        <TableRow>
+                            <TableHeading sortParams={{...sortParams, newSort: 'course_name'}}>
+                                Course name
+                            </TableHeading>
+                            <TableHeading sortParams={{...sortParams, newSort: 'course_created'}}>
+                                Date added
+                            </TableHeading>
+                            <TableHeading sortParams={{...sortParams, newSort: 'avg_time'}}>
+                                Average time
+                            </TableHeading>
+                            <TableHeading sortParams={{...sortParams, newSort: 'fastest_time'}}>
+                                Fastest time
+                            </TableHeading>
+                            <TableHeading sortParams={{...sortParams, newSort: 'fastest_player_name'}}>
+                                Fastest player
+                            </TableHeading>
+                        </TableRow>
+                    </thead>
+                    <tbody>
+                        {isPending ? <LoadingMsg colSpan={5}/> : error ? <ErrorMsg colSpan={5}/> :
+                            loadCourses(data.courses || [])
+                        }
+                    </tbody>
+                </table>
+                {isPending ? '' : error ? '' :
+                    <Pager pagerParams={pagerParams}/>
                 }
-            </tbody>
-        </table>
-        {isPending ? '' : error ? '' :
-            <Pager pagerParams={pagerParams}/>
-        }
+            </div>
+            <div>
+                <h2>[Course name]</h2>
+                <table>
+                    <tr>
+                        <td>Date added:</td>
+                        <td>–</td>
+                    </tr>
+                    <tr>
+                        <td>Total completions:</td>
+                        <td>–</td>
+                    </tr>
+                    <tr>
+                        <td>Players completed:</td>
+                        <td>–</td>
+                    </tr>
+                    <tr>
+                        <td colSpan={3}>Fastest player:</td>
+                    </tr>
+                    <tr>
+                        <td><img src={undefined} alt="" className="w-[24px] h-[24px] inline"/> –</td>
+                        <td>00:00:00.000</td>
+                        <td>(– deaths)</td>
+                    </tr>
+                    <tr>
+                        <td>Average first time:</td>
+                        <td>00:00:00.000</td>
+                        <td>(– deaths)</td>
+                    </tr>
+                </table>
+                <div>
+                    <Search />
+                    <table>
+                        <thead>
+                            <TableRow>
+                                <TableHeading fakeSort={true}>
+                                    Rank
+                                </TableHeading>
+                                <TableHeading fakeSort={true}>
+                                    Player name
+                                </TableHeading>
+                                <TableHeading fakeSort={true}>
+                                    Time
+                                </TableHeading>
+                                <TableHeading fakeSort={true}>
+                                    Deaths
+                                </TableHeading>
+                            </TableRow>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                    
+                </div>
+            </div>
+        </div>
     </>
 }

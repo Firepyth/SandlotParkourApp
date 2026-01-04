@@ -1,6 +1,7 @@
 import { Link } from "react-router";
+import GlobalSearch from "./GlobalSearch";
 
-export default function NavBar () {
+export default function NavBar ({ showSearch, setShowSearch }: {showSearch: boolean, setShowSearch: Function}) {
     return <>
         <header className="flex justify-between">
             <div>
@@ -10,8 +11,9 @@ export default function NavBar () {
                 <Link to="/">Home</Link>
                 <Link to="/players">Players</Link>
                 <Link to="/courses">Courses</Link>
-                <button className="cursor-pointer">Search</button>
+                <button className="cursor-pointer" onClick={() => setShowSearch(!showSearch)}>Search</button>
             </nav>
+            {showSearch ? <GlobalSearch setShowSearch={setShowSearch} /> : ''}
         </header>
     </>
 }

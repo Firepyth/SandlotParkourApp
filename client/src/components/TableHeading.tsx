@@ -13,16 +13,23 @@ interface TableHeadingProps {
         queryKey: string;
         setPage: Function;
     } | null;
-    column?: string;
+    fakeSort?: boolean;
 }
 
-export default function TableHeading ({children, sortParams = null}: TableHeadingProps) {
+export default function TableHeading ({children, sortParams = null, fakeSort = false}: TableHeadingProps) {
+    const classes = ''
+    if (fakeSort) {
+        return <th className={classes}>
+            {children}
+            <span className="mx-2">-</span>
+        </th>
+    }
     if (sortParams === null) {
-        return <th>
+        return <th className={classes}>
             {children}
         </th>
     }
-    return <th className="cursor-pointer" onClick={() => handleSort(sortParams)}>
+    return <th className={`cursor-pointer ${classes}`} onClick={() => handleSort(sortParams)}>
         {children}
         <span className="mx-2">{sortParams.sort !== sortParams.newSort ? '-' : sortParams.direction === 'ASC' ? '⏶' : '⏷'}</span>
     </th>
