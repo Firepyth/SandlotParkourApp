@@ -3,7 +3,7 @@ import GlobalSearch from "./GlobalSearch";
 
 export default function NavBar ({ showSearch, setShowSearch }: {showSearch: boolean, setShowSearch: Function}) {
     return <>
-        <header className="bg-[#bf1e36] h-[4rem]">
+        <header className="bg-[#bf1e36] h-[4rem] flex-[0_1_auto]">
             <div className="flex justify-between mx-auto max-w-[75rem] h-full">
                 <p className="inline-block font-minecraft text-[2rem]/[1em] my-auto pb-[.125rem]">
                     <Link to="/">Sandlot PK</Link>

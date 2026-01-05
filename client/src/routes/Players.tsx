@@ -9,7 +9,7 @@ import ErrorMsg from '../components/ErrorMsg';
 import TableRow from '../components/stylePresets/TableRow';
 import Pager from '../components/Pager';
 import { PlayerDetailsTable } from '../components/PlayerDetailsTable';
-import { PlayerImg } from '../components/stylePresets/presetStyles';
+import { Content, H1, PlayerImg, Table, TableContainer, TBody, THead } from '../components/stylePresets/presetStyles';
 
 interface Player {
     player_id: string;
@@ -49,7 +49,7 @@ export default function Players () {
             </TableRow>
         }
         return data.map((player: Player) => {
-            return <TableRow key={player.player_id} route={`/players?playerId=${player.player_id}`} className={`cursor-pointer${queryParams.get('playerId') === player.player_id ? ' bg-[#ddd]' : ''}`}>
+            return <TableRow key={player.player_id} route={`/players?playerId=${player.player_id}`} className={`cursor-pointer${queryParams.get('playerId') === player.player_id ? ' bg-[#5a5a5a]' : ''}`}>
                 <TableCell className="flex min-w-[16ch] items-center">
                     <PlayerImg player_id={player.player_id} player_name={player.player_name}/>
                     {player.player_name}
@@ -97,12 +97,12 @@ export default function Players () {
     }
 
     return <>
-        <h1>Players</h1>
-        <div className="flex gap-5">
-            <div>
+        <H1>Players</H1>
+        <Content className="gap-[3.2%]">
+            <TableContainer className="h-full">
                 <Search searchParams={searchParams} id="player-search"/>
-                <table>
-                    <thead>
+                <Table>
+                    <THead>
                         <TableRow>
                             <TableHeading sortParams={{...sortParams, newSort: 'player_name'}}>
                                 Player name
@@ -117,20 +117,20 @@ export default function Players () {
                                 Number of records
                             </TableHeading>
                         </TableRow>
-                    </thead>
-                    <tbody>
+                    </THead>
+                    <TBody>
                         {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4}/> :
                             loadCourses(data?.players || [])
                         }
-                    </tbody>
-                </table>
+                    </TBody>
+                </Table>
                 {isPending ? '' : error ? '' :
                     <Pager pagerParams={pagerParams}/>
                 }
-            </div>
-            <div>
+            </TableContainer>
+            <Content className="flex-col">
                 <PlayerDetailsTable />
-            </div>
-        </div>
+            </Content>
+        </Content>
     </>
 }

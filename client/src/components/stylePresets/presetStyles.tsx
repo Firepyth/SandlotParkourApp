@@ -9,11 +9,13 @@ export const H2 = ({children}: {children: React.ReactNode;}) => {
 }
 
 export const TableContainer = ({children, className = ''}: {children: React.ReactNode, className?: string}) => {
-    return <div className={`bg-[#232323] rounded-[.5rem] p-[1.5rem] ${className}`}>{children}</div>
+    return <div className={`bg-[#232323] rounded-[.5rem] p-[1.5rem] flex flex-col flex-[1_1_auto] overflow-hidden ${className}`}>{children}</div>
 }
 
 export const Table = ({children, className = ''}: {children: React.ReactNode, className?: string}) => {
-    return <table className={`w-full border-b-[2px] border-[#404040] ${className}`}>{children}</table>
+    return <div className="overflow-y-auto h-full flex-[1_1_auto] border-b-[2px] border-[#404040]">
+        <table className={`w-full ${className}`}>{children}</table>
+    </div>
 }
 
 export const THead = ({children, className = ''}: {children: React.ReactNode, className?: string}) => {
@@ -30,4 +32,8 @@ export const PlayerImg = ({className = '', player_id, player_name}: {className?:
 
 export const Link = ({children, className = '', to, state = undefined}: {children: React.ReactNode, className?: string, to: string, state?: object}) => {
     return <p className={`${className}`}><ReactLink className="text-[#ff8066] underline" to={to} state={state}>{children}</ReactLink></p>
+}
+
+export const Content = ({children, className = ''}: {children: React.ReactNode, className?: string}) => {
+    return <div className={`flex flex-[1_1_auto] h-full overflow-hidden ${className}`}>{children}</div>
 }

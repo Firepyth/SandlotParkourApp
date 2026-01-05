@@ -9,7 +9,7 @@ import LoadingMsg from '../components/LoadingMsg';
 import ErrorMsg from '../components/ErrorMsg';
 import TableRow from '../components/stylePresets/TableRow';
 import Pager from '../components/Pager';
-import { PlayerImg } from '../components/stylePresets/presetStyles';
+import { Content, H1, H2, PlayerImg, Table, TableContainer, TBody, THead } from '../components/stylePresets/presetStyles';
 
 interface Course {
     course_id: number;
@@ -101,12 +101,12 @@ export default function Courses () {
     }
 
     return <>
-        <h1>Courses</h1>
-        <div className="flex gap-5">
-            <div>
+        <H1>Courses</H1>
+        <Content className="gap-[3.2%]">
+            <TableContainer>
                 <Search searchParams={searchParams} id="course-search"/>
-                <table>
-                    <thead>
+                <Table>
+                    <THead>
                         <TableRow>
                             <TableHeading sortParams={{...sortParams, newSort: 'course_name'}}>
                                 Course name
@@ -124,19 +124,19 @@ export default function Courses () {
                                 Fastest player
                             </TableHeading>
                         </TableRow>
-                    </thead>
-                    <tbody>
+                    </THead>
+                    <TBody>
                         {isPending ? <LoadingMsg colSpan={5}/> : error ? <ErrorMsg colSpan={5}/> :
                             loadCourses(data.courses || [])
                         }
-                    </tbody>
-                </table>
+                    </TBody>
+                </Table>
                 {isPending ? '' : error ? '' :
                     <Pager pagerParams={pagerParams}/>
                 }
-            </div>
-            <div>
-                <h2>[Course name]</h2>
+            </TableContainer>
+            <TableContainer>
+                <H2>[Course name]</H2>
                 <table>
                     <tr>
                         <td>Date added:</td>
@@ -164,10 +164,10 @@ export default function Courses () {
                         <td>(– deaths)</td>
                     </tr>
                 </table>
-                <div>
+                <Content className="flex-col">
                     <Search id="" />
-                    <table>
-                        <thead>
+                    <Table>
+                        <THead>
                             <TableRow>
                                 <TableHeading fakeSort={true}>
                                     Rank
@@ -182,13 +182,14 @@ export default function Courses () {
                                     Deaths
                                 </TableHeading>
                             </TableRow>
-                        </thead>
+                        </THead>
                         <tbody>
+                            
                         </tbody>
-                    </table>
-                    
-                </div>
-            </div>
-        </div>
+                    </Table>
+                    <Pager pagerParams={{page: 1, setPage: () => {}, queryClient, maxItems: 1, queryKey: "blank"}}/>
+                </Content>
+            </TableContainer>
+        </Content>
     </>
 }

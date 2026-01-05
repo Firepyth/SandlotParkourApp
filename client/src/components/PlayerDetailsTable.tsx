@@ -9,7 +9,7 @@ import LoadingMsg from './LoadingMsg';
 import ErrorMsg from './ErrorMsg';
 import TableRow from './stylePresets/TableRow';
 import Pager from './Pager';
-import { PlayerImg } from './stylePresets/presetStyles';
+import { H2, PlayerImg, Table, TableContainer, TBody, THead } from './stylePresets/presetStyles';
 
 interface PlayerTime {
     course_name: string;
@@ -89,10 +89,16 @@ export const PlayerDetailsTable = () => {
             if (playerTime.fastest_time === null) {
                 return <TableRow key={playerTime.course_id} route={`/players/${id}/${playerTime.course_id}`} className="cursor-pointer">
                     <TableCell>
+                        –
+                    </TableCell>
+                    <TableCell>
                         {toTitle(playerTime.course_name)}
                     </TableCell>
-                    <TableCell colSpan={3} className="text-center">
-                        <i>N/A</i>
+                    <TableCell>
+                        –
+                    </TableCell>
+                    <TableCell>
+                        –
                     </TableCell>
                 </TableRow>
             }
@@ -139,44 +145,44 @@ export const PlayerDetailsTable = () => {
         fetchTimeout,
         queryClient,
         queryKey: `PlayerDetailsCompletions${id}`,
-        maxItems: data?.matched_courses
+        maxItems: Math.max(data?.matched_courses || 1, 1)
     }
 
     return <>
         <PlayerImg player_id={id !== '' ? id : undefined} player_name={isPending || error ? '' : data.player_name} className="w-[4rem] h-[4rem]"/>
-        <h2>{isPending || error ? '[Player name]' : data.player_name}</h2>
-        <div className="flex gap-5">
+        <H2>{isPending || error ? '[Player name]' : data.player_name}</H2>
+        <TableContainer className="h-full">
             <Search searchParams={searchParams} id="player-course-search"/>
-            <label htmlFor="completed">Completed</label>
-            <input type="checkbox" id="completed" onChange={() => handleCategoryChange("completed")} checked={category.completed}/>
-            <label htmlFor="uncompleted">Uncompleted</label>
-            <input type="checkbox" id="uncompleted" onChange={() => handleCategoryChange("uncompleted")} checked={category.uncompleted}/>
-        </div>
-        <table>
-            <thead>
-                <TableRow>
-                    <TableHeading sortParams={{...sortParams, newSort: 'course_name'}}>
-                        Rank
-                    </TableHeading>
-                    <TableHeading sortParams={{...sortParams, newSort: 'leaderboard_position'}}>
-                        Course name
-                    </TableHeading>
-                    <TableHeading sortParams={{...sortParams, newSort: 'fastest_time'}}>
-                        Time
-                    </TableHeading>
-                    <TableHeading sortParams={{...sortParams, newSort: 'deaths'}}>
-                        Deaths
-                    </TableHeading>
-                </TableRow>
-            </thead>
-            <tbody>
-                {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4} /> :
-                    loadCourses(data.completions || [])
-                }
-            </tbody>
-        </table>
-        {isPending || error || data.matched_courses === -1 ? '' : 
-            <Pager pagerParams={pagerParams}/>
-        }
+            <div className="border-b-[2px] border-[#404040] pb-[.5rem] mb-[.5rem] mt-[-.5rem] flex items-center">
+                <input type="checkbox" id="completed" className="hidden" onChange={() => handleCategoryChange("completed")} checked={category.completed}/>
+                <label htmlFor="completed" className="mr-[1em] uppercase text-[.75rem]">{category.completed ? <i className="fa-regular fa-square-check text-[1rem]"></i> : <i className="fa-regular fa-square text-[1rem]"></i>} Completed</label>
+                <input type="checkbox" id="uncompleted" className="hidden" onChange={() => handleCategoryChange("uncompleted")} checked={category.uncompleted}/>
+                <label htmlFor="uncompleted"  className="mr-[1em] uppercase text-[.75rem]">{category.uncompleted ? <i className="fa-regular fa-square-check text-[1rem]"></i> : <i className="fa-regular fa-square text-[1rem]"></i>} Uncompleted</label>
+            </div>
+            <Table>
+                <THead>
+                    <TableRow>
+                        <TableHeading sortParams={{...sortParams, newSort: 'leaderboard_position'}}>
+                            Rank
+                        </TableHeading>
+                        <TableHeading sortParams={{...sortParams, newSort: 'course_name'}}>
+                            Course name
+                        </TableHeading>
+                        <TableHeading sortParams={{...sortParams, newSort: 'fastest_time'}}>
+                            Time
+                        </TableHeading>
+                        <TableHeading sortParams={{...sortParams, newSort: 'deaths'}}>
+                            Deaths
+                        </TableHeading>
+                    </TableRow>
+                </THead>
+                <TBody>
+                    {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4} /> :
+                        loadCourses(data.completions || [])
+                    }
+                </TBody>
+            </Table>
+                <Pager pagerParams={pagerParams}/>
+        </TableContainer>
     </>
 }

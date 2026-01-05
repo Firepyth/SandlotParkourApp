@@ -9,7 +9,7 @@ import TableRow from '../components/stylePresets/TableRow';
 import LoadingMsg from '../components/LoadingMsg';
 import ErrorMsg from '../components/ErrorMsg';
 import Pager from '../components/Pager';
-import { PlayerImg } from '../components/stylePresets/presetStyles';
+import { PlayerImg, Table, TableContainer, TBody, THead } from '../components/stylePresets/presetStyles';
 
 interface Course {
     course_name: string;
@@ -108,10 +108,10 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
         maxItems: data?.matched_completions
     }
 
-    return <>
+    return <TableContainer>
         <Search searchParams={searchParams} id="course-player-search"/>
-        <table>
-            <thead>
+        <Table>
+            <THead>
                 <TableRow>
                     <TableHeading sortParams={{...sortParams, newSort: 'rank'}}>
                         Rank
@@ -126,17 +126,17 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
                         Deaths
                     </TableHeading>
                 </TableRow>
-            </thead>
-            <tbody>
+            </THead>
+            <TBody>
                 {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4}/> :
                     loadCourses(data.completions || [])
                 }
-            </tbody>
-        </table>
+            </TBody>
+        </Table>
         {isPending ? '' : error ? '' :
             <Pager pagerParams={pagerParams}/>
         }
-    </>
+    </TableContainer>
 }
 
 export default function CourseDetails () {
