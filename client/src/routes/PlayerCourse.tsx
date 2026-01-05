@@ -131,32 +131,34 @@ export default function PlayerCourse () {
 
                 </div>
             </TableContainer>
-            <TableContainer>
+            <div className="flex flex-col flex-[1_1_auto] overflow-hidden">
                 <H2 className="cursor-pointer"><Link to={`/courses/${course_id}`}>{toTitle(data.course_name)}</Link></H2>
-                <Link className="flex cursor-pointer" to={`/players?playerId=${player_id}`}><PlayerImg player_id={data.player_id} player_name={data.player_name} className="inline-block w-[1.5rem] h-[1.5rem]"/>{data.player_name}</Link>
-                <table className="mb-[.5rem]">
-                    <tr>
-                        <td>Highest rank:</td>
-                        <td>{data.leaderboard_position}</td>
-                    </tr>
-                    <tr>
-                        <td>Fastest time:</td>
-                        <td>{toTime(data.fastest_time)}</td>
-                        <td>({data.fastest_deaths} deaths)</td>
-                    </tr>
-                    <tr>
-                        <td>Average time:</td>
-                        <td>{toTime(data.avg_time)}</td>
-                        <td>({Number(data.avg_deaths).toFixed(1)} deaths)</td>
-                    </tr>
-                    <tr>
-                        <td>First time:</td>
-                        <td>{toTime(data.first_time)}</td>
-                        <td>({data.first_deaths} deaths)</td>
-                    </tr>
-                </table>
-                {player_id && course_id ? <PlayerCourseTable player_id={player_id} course_id={Number(course_id)} total_completions={data.total_completions}/> : ''}
-            </TableContainer>
+                <TableContainer>
+                    <Link className="flex cursor-pointer" to={`/players?playerId=${player_id}`}><H2><PlayerImg player_id={data.player_id} player_name={data.player_name} className="inline-block w-[1.5rem] h-[1.5rem]"/>{data.player_name}</H2></Link>
+                    <table className="mb-[.5rem]">
+                        <tr>
+                            <td className="pb-[1rem]">Highest rank:</td>
+                            <td className="pb-[1rem]">{data.leaderboard_position}</td>
+                        </tr>
+                        <tr>
+                            <td>Fastest time:</td>
+                            <td>{toTime(data.fastest_time)}</td>
+                            <td>({data.fastest_deaths} deaths)</td>
+                        </tr>
+                        <tr>
+                            <td>Average time:</td>
+                            <td>{toTime(data.avg_time)}</td>
+                            <td>({Number(data.avg_deaths).toFixed(1)} deaths)</td>
+                        </tr>
+                        <tr>
+                            <td className="pb-[1rem]">First time:</td>
+                            <td className="pb-[1rem]">{toTime(data.first_time)}</td>
+                            <td className="pb-[1rem]">({data.first_deaths} deaths)</td>
+                        </tr>
+                    </table>
+                    {player_id && course_id ? <PlayerCourseTable player_id={player_id} course_id={Number(course_id)} total_completions={data.total_completions}/> : ''}
+                </TableContainer>
+            </div>
         </Content>
     </>
 }

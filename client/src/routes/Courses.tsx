@@ -135,61 +135,64 @@ export default function Courses () {
                     <Pager pagerParams={pagerParams}/>
                 }
             </TableContainer>
-            <TableContainer>
+            <div className="flex flex-col flex-[1_1_auto] overflow-hidden">
                 <H2>[Course name]</H2>
-                <table className="mb-[.5rem]">
-                    <tr>
-                        <td>Date added:</td>
-                        <td>–</td>
-                    </tr>
-                    <tr>
-                        <td>Total completions:</td>
-                        <td>–</td>
-                    </tr>
-                    <tr>
-                        <td>Players completed:</td>
-                        <td>–</td>
-                    </tr>
-                    <tr>
-                        <td colSpan={3}>Fastest player:</td>
-                    </tr>
-                    <tr>
-                        <td><img src={undefined} alt="" className="w-[24px] h-[24px] inline"/> –</td>
-                        <td>00:00:00.000</td>
-                        <td>(– deaths)</td>
-                    </tr>
-                    <tr>
-                        <td>Average first time:</td>
-                        <td>00:00:00.000</td>
-                        <td>(– deaths)</td>
-                    </tr>
-                </table>
-                <Content className="flex-col">
-                    <Search id="" />
-                    <Table>
-                        <THead>
-                            <TableRow>
-                                <TableHeading fakeSort={true}>
-                                    Rank
-                                </TableHeading>
-                                <TableHeading fakeSort={true}>
-                                    Player name
-                                </TableHeading>
-                                <TableHeading fakeSort={true}>
-                                    Time
-                                </TableHeading>
-                                <TableHeading fakeSort={true}>
-                                    Deaths
-                                </TableHeading>
-                            </TableRow>
-                        </THead>
-                        <tbody>
-                            
-                        </tbody>
-                    </Table>
-                    <Pager pagerParams={{page: 1, setPage: () => {}, queryClient, maxItems: 1, queryKey: "blank"}}/>
-                </Content>
-            </TableContainer>
+                <TableContainer>
+                    
+                    <table className="mb-[.5rem]">
+                        <tr>
+                            <td>Date added:</td>
+                            <td>–</td>
+                        </tr>
+                        <tr>
+                            <td>Total completions:</td>
+                            <td>–</td>
+                        </tr>
+                        <tr>
+                            <td>Players completed:</td>
+                            <td>–</td>
+                        </tr>
+                        <tr>
+                            <td colSpan={3}>Fastest player:</td>
+                        </tr>
+                        <tr>
+                            <td><img src={undefined} alt="" className="w-[24px] h-[24px] inline"/> –</td>
+                            <td>00:00:00.000</td>
+                            <td>(– deaths)</td>
+                        </tr>
+                        <tr>
+                            <td>Average first time:</td>
+                            <td>00:00:00.000</td>
+                            <td>(– deaths)</td>
+                        </tr>
+                    </table>
+                    <Content className="flex-col">
+                        <Search id="" />
+                        <Table>
+                            <THead>
+                                <TableRow>
+                                    <TableHeading fakeSort={true}>
+                                        Rank
+                                    </TableHeading>
+                                    <TableHeading fakeSort={true}>
+                                        Player name
+                                    </TableHeading>
+                                    <TableHeading fakeSort={true}>
+                                        Time
+                                    </TableHeading>
+                                    <TableHeading fakeSort={true}>
+                                        Deaths
+                                    </TableHeading>
+                                </TableRow>
+                            </THead>
+                            <tbody>
+                                
+                            </tbody>
+                        </Table>
+                        <Pager pagerParams={{page: 1, setPage: () => {}, queryClient, maxItems: 1, queryKey: "blank"}}/>
+                    </Content>
+                </TableContainer>
+            </div>
         </Content>
     </>
 }

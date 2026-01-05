@@ -160,46 +160,48 @@ export default function CourseDetails () {
 
                 </div>
             </TableContainer>
-            <TableContainer>
+            <div className="flex flex-col flex-[1_1_auto] overflow-hidden">
                 <H2>{toTitle(data.course_name)}</H2>
-                <table className="mb-[.5rem]">
-                    <tr>
-                        <td>Date added:</td>
-                        <td>{toDate(data.course_created)}</td>
-                    </tr>
-                    <tr>
-                        <td>Total completions:</td>
-                        <td>{data.total_completions ? data.total_completions : '–'}</td>
-                    </tr>
-                    <tr>
-                        <td>Players completed:</td>
-                        <td>{data.total_completions ? data.unique_completions : '–'}</td>
-                    </tr>
-                    <tr>
-                        <td colSpan={3}>Fastest player:</td>
-                    </tr>
-                    <tr>
-                        <td onClick={data.total_completions ? () => navigate(`/players/${data.fastest_player_id}/${id}`) : undefined} className="flex cursor-pointer">
-                            <Link to={data.total_completions ? `/players/${data.fastest_player_id}/${id}` : ''}>
-                                <PlayerImg 
-                                    player_id={data.total_completions ? data.fastest_player_id : undefined}
-                                    player_name={data.total_completions ? data.fastest_player_name : ''}
-                                    className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.5rem]"/>
-                                {data.total_completions ? data.fastest_player_name : '–'}
-                            </Link>
-                        </td>
-                        <td>{data.total_completions ? toTime(data.fastest_time) : '00:00:00.000'}</td>
-                        <td>({data.total_completions ? data.fastest_deaths : '–'} deaths)</td>
-                    </tr>
-                    <tr>
-                        <td>Average first time:</td>
-                        <td>{data.total_completions ? toTime(data.avg_first_time) : '00:00:00.000'}</td>
-                        <td>({data.total_completions ? Number(data.avg_first_deaths).toFixed(1) : '–'} deaths)</td>
-                    </tr>
-                </table>
-                
-                <CourseDetailsTable id={Number(id)}/>
-            </TableContainer>
+                <TableContainer>
+                    <table className="mb-[.5rem]">
+                        <tr>
+                            <td>Date added:</td>
+                            <td>{toDate(data.course_created)}</td>
+                        </tr>
+                        <tr>
+                            <td>Total completions:</td>
+                            <td>{data.total_completions ? data.total_completions : '–'}</td>
+                        </tr>
+                        <tr>
+                            <td>Players completed:</td>
+                            <td>{data.total_completions ? data.unique_completions : '–'}</td>
+                        </tr>
+                        <tr>
+                            <td colSpan={3}>Fastest player:</td>
+                        </tr>
+                        <tr>
+                            <td onClick={data.total_completions ? () => navigate(`/players/${data.fastest_player_id}/${id}`) : undefined} className="flex cursor-pointer">
+                                <Link to={data.total_completions ? `/players/${data.fastest_player_id}/${id}` : ''}>
+                                    <PlayerImg 
+                                        player_id={data.total_completions ? data.fastest_player_id : undefined}
+                                        player_name={data.total_completions ? data.fastest_player_name : ''}
+                                        className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.5rem]"/>
+                                    {data.total_completions ? data.fastest_player_name : '–'}
+                                </Link>
+                            </td>
+                            <td>{data.total_completions ? toTime(data.fastest_time) : '00:00:00.000'}</td>
+                            <td>({data.total_completions ? data.fastest_deaths : '–'} deaths)</td>
+                        </tr>
+                        <tr>
+                            <td>Average first time:</td>
+                            <td>{data.total_completions ? toTime(data.avg_first_time) : '00:00:00.000'}</td>
+                            <td>({data.total_completions ? Number(data.avg_first_deaths).toFixed(1) : '–'} deaths)</td>
+                        </tr>
+                    </table>
+                    
+                    <CourseDetailsTable id={Number(id)}/>
+                </TableContainer>
+            </div>
         </Content>
     </>
 }
