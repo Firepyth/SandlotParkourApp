@@ -237,7 +237,7 @@ router.get('/completions/all/:player_id', async function(req, res, next) {
         const result: PlayerTime[] = await prisma.$queryRaw`
             SELECT
                 MIN(matched_courses) AS matched_courses,
-                MIN(name) AS player_name,
+                MIN(player_name) AS player_name,
                 JSON_AGG(
                     JSON_BUILD_OBJECT(
                         'course_name', course_name,
@@ -249,51 +249,65 @@ router.get('/completions/all/:player_id', async function(req, res, next) {
                     )
                 ) AS completions
             FROM (
-                SELECT
-                    *,
-                    COUNT(course_id) OVER () AS matched_courses
-                FROM (
-                    (SELECT
-                        DISTINCT ON (time."courseId")
-                        course.name AS course_name, time."courseId" AS course_id, time AS "fastest_time", deaths, b."leaderboard_position", time."timeId" AS time_id
-                    FROM time
-                    JOIN course ON course."courseId" = time."courseId"
-                    JOIN (
-                        WITH best_times AS (
-                            SELECT DISTINCT ON ("courseId", "playerId")
+                (
+                    SELECT
+                        *,
+                        COUNT(course_id) OVER () AS matched_courses
+                    FROM (
+                        (SELECT
+                            DISTINCT ON (time."courseId")
+                            course.name AS course_name, time."courseId" AS course_id, time AS "fastest_time", deaths, b."leaderboard_position", time."timeId" AS time_id, NULL AS player_name
+                        FROM time
+                        JOIN course ON course."courseId" = time."courseId"
+                        JOIN (
+                            WITH best_times AS (
+                                SELECT DISTINCT ON ("courseId", "playerId")
+                                    "courseId",
+                                    "playerId",
+                                    "time" AS best_time
+                                FROM time
+                                ORDER BY "courseId", "playerId", "time" ASC
+                            )
+                            SELECT
                                 "courseId",
                                 "playerId",
-                                "time" AS "best_time"
-                            FROM time
-                            ORDER BY "courseId", "playerId", "time" ASC
-                        )
-                        SELECT
-                            "courseId",
-                            "playerId",
-                            RANK() OVER (PARTITION BY "courseId" ORDER BY "best_time" ASC) AS "leaderboard_position"
-                        FROM best_times
-                        ORDER BY "courseId", "leaderboard_position", "best_time"
-                    ) b ON time."courseId" = b."courseId" AND time."playerId" = b."playerId"
-                    WHERE time."playerId" = ${req.params.player_id}
-                    ORDER BY time."courseId", time)
-                    UNION
-                    (SELECT
-                        course.name, course."courseId", NULL, NULL, NULL, NULL
-                    FROM (
-                        SELECT
-                            DISTINCT ON ("courseId")
-                            *
-                        FROM time
+                                RANK() OVER (PARTITION BY "courseId" ORDER BY "best_time" ASC) AS "leaderboard_position"
+                            FROM best_times
+                            ORDER BY "courseId", "leaderboard_position", "best_time"
+                        ) b ON time."courseId" = b."courseId" AND time."playerId" = b."playerId"
                         WHERE time."playerId" = ${req.params.player_id}
-                    ) a
-                    RIGHT JOIN course ON a."courseId" = course."courseId"
-                    WHERE "playerId" IS NULL)
-                ) result
-                JOIN player ON player."playerId" = ${req.params.player_id}
-                WHERE LOWER(result.course_name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
-                ORDER BY ${sort ? Prisma.raw(`result.${sort} ${direction}, result.course_name ASC`) : Prisma.raw(`result.course_name ${direction}`)}
-                LIMIT 50
-                OFFSET ${(page - 1) * 50}
+                        ORDER BY time."courseId", time)
+                        UNION
+                        (SELECT
+                            course.name, course."courseId", NULL, NULL, NULL, NULL, NULL
+                        FROM (
+                            SELECT
+                                DISTINCT ON ("courseId")
+                                *
+                            FROM time
+                            WHERE time."playerId" = ${req.params.player_id}
+                        ) a
+                        RIGHT JOIN course ON a."courseId" = course."courseId"
+                        WHERE "playerId" IS NULL)
+                    ) result
+                    WHERE LOWER(result.course_name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
+                    ORDER BY ${sort ? Prisma.raw(`result.${sort} ${direction}, result.course_name ASC`) : Prisma.raw(`result.course_name ${direction}`)}
+                    LIMIT 50
+                    OFFSET ${(page - 1) * 50}
+                )
+                UNION (
+                    SELECT
+                        NULL,
+                        NULL,
+                        NULL,
+                        NULL,
+                        NULL,
+                        NULL,
+                        name,
+                        NULL
+                    FROM player
+                    WHERE "playerId" = ${req.params.player_id}
+                )
             )
             ;
         `;
@@ -341,39 +355,55 @@ router.get('/completions/finished/:player_id', async function(req, res, next) {
                     )
                 ) AS completions
             FROM (
-                SELECT
-                    *,
-                    COUNT(course_id) OVER () AS matched_courses
-                FROM (
+                (
                     SELECT
-                        DISTINCT ON (time."courseId")
-                        course.name AS course_name, time."courseId" AS course_id, time AS "fastest_time", deaths, b."leaderboard_position", time."timeId" AS time_id
-                    FROM time
-                    JOIN course ON course."courseId" = time."courseId"
-                    JOIN (
-                        WITH best_times AS (
-                            SELECT DISTINCT ON ("courseId", "playerId")
+                        *,
+                        COUNT(course_id) OVER () AS matched_courses
+                    FROM (
+                        SELECT
+                            DISTINCT ON (time."courseId")
+                            course.name AS course_name, time."courseId" AS course_id, time AS "fastest_time", deaths, b."leaderboard_position", time."timeId" AS time_id
+                        FROM time
+                        JOIN course ON course."courseId" = time."courseId"
+                        JOIN (
+                            WITH best_times AS (
+                                SELECT DISTINCT ON ("courseId", "playerId")
+                                    "courseId",
+                                    "playerId",
+                                    "time" AS "best_time"
+                                FROM time
+                                ORDER BY "courseId", "playerId", "time" ASC
+                            )
+                            SELECT
                                 "courseId",
                                 "playerId",
-                                "time" AS "best_time"
-                            FROM time
-                            ORDER BY "courseId", "playerId", "time" ASC
-                        )
-                        SELECT
-                            "courseId",
-                            "playerId",
-                            RANK() OVER (PARTITION BY "courseId" ORDER BY "best_time" ASC) AS "leaderboard_position"
-                        FROM best_times
-                        ORDER BY "courseId", "leaderboard_position", "best_time"
-                    ) b ON time."courseId" = b."courseId" AND time."playerId" = b."playerId"
-                    WHERE time."playerId" = ${req.params.player_id}
-                    ORDER BY time."courseId", time
-                ) result
-                JOIN player ON player."playerId" = ${req.params.player_id}
-                WHERE LOWER(result.course_name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
-                ORDER BY ${sort ? Prisma.raw(`result.${sort} ${direction}, result.course_name ASC`) : Prisma.raw(`result.course_name ${direction}`)}
-                LIMIT 50
-                OFFSET ${(page - 1) * 50}
+                                RANK() OVER (PARTITION BY "courseId" ORDER BY "best_time" ASC) AS "leaderboard_position"
+                            FROM best_times
+                            ORDER BY "courseId", "leaderboard_position", "best_time"
+                        ) b ON time."courseId" = b."courseId" AND time."playerId" = b."playerId"
+                        WHERE time."playerId" = ${req.params.player_id}
+                        ORDER BY time."courseId", time
+                    ) result
+                    JOIN player ON player."playerId" = ${req.params.player_id}
+                    WHERE LOWER(result.course_name) LIKE '%' || LOWER(${req.query.search || ''}) || '%'
+                    ORDER BY ${sort ? Prisma.raw(`result.${sort} ${direction}, result.course_name ASC`) : Prisma.raw(`result.course_name ${direction}`)}
+                    LIMIT 50
+                    OFFSET ${(page - 1) * 50}
+                )
+                UNION(
+                    SELECT
+                        NULL,
+                        NULL,
+                        NULL,
+                        NULL,
+                        NULL,
+                        NULL,
+                        NULL,
+                        name AS player_name,
+                        NULL
+                    FROM player
+                    WHERE "playerId" = ${req.params.player_id}
+                )
             )
             ;
         `;
