@@ -50,8 +50,8 @@ export default function Players () {
         }
         return data.map((player: Player) => {
             return <TableRow key={player.player_id} route={`/players?playerId=${player.player_id}`} className={`cursor-pointer${queryParams.get('playerId') === player.player_id ? ' bg-[#5a5a5a]' : ''}`}>
-                <TableCell className="flex min-w-[16ch] items-center">
-                    <PlayerImg player_id={player.player_id} player_name={player.player_name}/>
+                <TableCell className="min-w-[16ch]">
+                    <PlayerImg player_id={player.player_id} player_name={player.player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
                     {player.player_name}
                 </TableCell>
                 <TableCell>

@@ -28,8 +28,8 @@ export default function HomeTable ({ data, type }: { data: Data[], type: string}
 
         return data.map((item) => {
             return <TableRow key={item.player_id} route={`/players?playerId=${item.player_id}`} className="cursor-pointer">
-                    <TableCell className="flex min-w-[16ch] items-center">
-                        <PlayerImg player_id={item.player_id} player_name={item.player_name}/>
+                    <TableCell>
+                        <PlayerImg player_id={item.player_id} player_name={item.player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
                         {item.player_name}
                     </TableCell>
                     <TableCell>{item.completed_courses}</TableCell>

@@ -7,6 +7,7 @@ import LoadingMsg from "./LoadingMsg";
 import ErrorMsg from "./ErrorMsg";
 import TableCell from "./stylePresets/TableCell";
 import { toTitle } from "../helpers/convert";
+import { PlayerImg, Table, TableContainer, TBody, THead } from "./stylePresets/presetStyles";
 
 interface SearchResult {
     course_id: number | null;
@@ -50,7 +51,7 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
         const rows = data.map((item: SearchResult) => {
             if (item.course_id === null) return;
             return <TableRow route={`/courses/${item.course_id}`} className="cursor-pointer" setShowSearch={setShowSearch}>
-                <TableCell className="align-top">
+                <TableCell>
                     {toTitle(item.course_name || '')}
                 </TableCell>
             </TableRow>
@@ -78,8 +79,8 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
         const rows = data.map((item: SearchResult) => {
             if (item.player_id === null) return;
             return <TableRow route={`/players?playerId=${item.player_id}`} className="cursor-pointer" setShowSearch={setShowSearch}>
-                <TableCell className="flex align-top">
-                    <img src={`https://mc-heads.net/avatar/${item.player_id}`} alt={item.player_name || ''} width="24px" height="24px"/>
+                <TableCell>
+                    <PlayerImg player_id={item.player_id || ''} player_name={item.player_name || ''} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
                     {item.player_name}
                 </TableCell>
             </TableRow>
@@ -93,29 +94,29 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
         return rows;
     }
 
-    return <div className="absolute left-0 right-0 w-[400px] top-20 mx-auto bg-white" onClick={(e) => e.stopPropagation()}>
+    return <TableContainer className="absolute left-0 right-0 w-[32.5rem] top-20 mx-auto z-1 shadow-[0_0_0_max(100vh,_100vw)_rgba(0,_0,_0,_.5)]" onClick={(e: Event) => e.stopPropagation()}>
         <Search searchParams={searchParams} autofocus={true} id="global-search"/>
-        <div className="flex gap-5">
-            <table>
-                <thead>
+        <div className="flex gap-[1rem]">
+            <Table className="w-full h-[8.875rem]" strictHeight={true}>
+                <THead>
                     <TableHeading>
                         Player name
                     </TableHeading>
-                </thead>
-                <tbody>
+                </THead>
+                <TBody>
                     {isPending ? <LoadingMsg /> : error ? <ErrorMsg /> : loadPlayers(data)}
-                </tbody>
-            </table>
-            <table>
-                <thead>
+                </TBody>
+            </Table>
+            <Table className="w-full h-[8.875rem]" strictHeight={true}>
+                <THead>
                     <TableHeading>
                         Course name
                     </TableHeading>
-                </thead>
-                <tbody>
+                </THead>
+                <TBody>
                     {isPending ? <LoadingMsg /> : error ? <ErrorMsg /> : loadCourses(data)}
-                </tbody>
-            </table>
+                </TBody>
+            </Table>
         </div>
-    </div>
+    </TableContainer>
 }

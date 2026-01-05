@@ -63,8 +63,8 @@ export default function Courses () {
                 <TableCell>
                     {toTime(course.fastest_time)}
                 </TableCell>
-                <TableCell className="flex min-w-[16ch] items-center">
-                    <PlayerImg player_id={course.fastest_player_id} player_name={course.fastest_player_name}/>
+                <TableCell>
+                    <PlayerImg player_id={course.fastest_player_id} player_name={course.fastest_player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
                     {course.fastest_player_name}
                 </TableCell>
             </TableRow>

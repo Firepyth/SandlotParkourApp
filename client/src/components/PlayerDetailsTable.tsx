@@ -87,7 +87,7 @@ export const PlayerDetailsTable = () => {
         return data.map((playerTime: PlayerTime, ) => {
             if (playerTime.course_name === null) return;
             if (playerTime.fastest_time === null) {
-                return <TableRow key={playerTime.course_id} route={`/players/${id}/${playerTime.course_id}`} className="cursor-pointer">
+                return <TableRow key={playerTime.course_id}>
                     <TableCell>
                         –
                     </TableCell>
@@ -149,9 +149,9 @@ export const PlayerDetailsTable = () => {
     }
 
     return <>
-        <PlayerImg player_id={id !== '' ? id : undefined} player_name={isPending || error ? '' : data.player_name} className="w-[4rem] h-[4rem]"/>
+        <PlayerImg player_id={id !== '' ? id : undefined} player_name={isPending || error ? '' : data.player_name} className="w-[4rem] h-[4rem] mb-[.5rem]"/>
         <H2>{isPending || error ? '[Player name]' : data.player_name}</H2>
-        <TableContainer className="h-full">
+        <TableContainer className="">
             <Search searchParams={searchParams} id="player-course-search"/>
             <div className="border-b-[2px] border-[#404040] pb-[.5rem] mb-[.5rem] mt-[-.5rem] flex items-center">
                 <input type="checkbox" id="completed" className="hidden" onChange={() => handleCategoryChange("completed")} checked={category.completed}/>

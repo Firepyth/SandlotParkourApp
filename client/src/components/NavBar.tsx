@@ -5,10 +5,10 @@ export default function NavBar ({ showSearch, setShowSearch }: {showSearch: bool
     return <>
         <header className="bg-[#bf1e36] h-[4rem] flex-[0_1_auto]">
             <div className="flex justify-between mx-auto max-w-[75rem] h-full">
-                <p className="inline-block font-minecraft text-[2rem]/[1em] my-auto pb-[.125rem]">
+                <p className={`inline-block font-minecraft text-[2rem]/[1em] my-auto pb-[.125rem]${showSearch ? ' pointer-events-none' : ''}`}>
                     <Link to="/">Sandlot PK</Link>
                 </p>
-                <nav className="font-minecraft font-[.75rem] tracking-[.2em] my-auto uppercase">
+                <nav className={`font-minecraft font-[.75rem] tracking-[.2em] my-auto uppercase${showSearch ? ' pointer-events-none' : ''}`}>
                     <Link className="inline-block ml-[.5rem] tracking-[.1em]" to="/">Home</Link>
                     <Link className="inline-block ml-[.5rem] tracking-[.1em]" to="/players">Players</Link>
                     <Link className="inline-block ml-[.5rem] tracking-[.1em]" to="/courses">Courses</Link>
