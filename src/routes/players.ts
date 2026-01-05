@@ -308,6 +308,7 @@ router.get('/completions/all/:player_id', async function(req, res, next) {
                     FROM player
                     WHERE "playerId" = ${req.params.player_id}
                 )
+                ORDER BY ${sort ? Prisma.raw(`${sort} ${direction}, course_name ASC`) : Prisma.raw(`course_name ${direction}`)}
             )
             ;
         `;
@@ -404,6 +405,7 @@ router.get('/completions/finished/:player_id', async function(req, res, next) {
                     FROM player
                     WHERE "playerId" = ${req.params.player_id}
                 )
+                ORDER BY ${sort ? Prisma.raw(`${sort} ${direction}, course_name ASC`) : Prisma.raw(`course_name ${direction}`)}
             )
             ;
         `;
@@ -487,6 +489,7 @@ router.get('/completions/unfinished/:player_id', async function(req, res, next) 
                     FROM player
                     WHERE "playerId" = ${req.params.player_id}
                 )
+                ORDER BY ${sort ? Prisma.raw(`${sort} ${direction}, course_name ASC`) : Prisma.raw(`course_name ${direction}`)}
             )
             ;
         `;
