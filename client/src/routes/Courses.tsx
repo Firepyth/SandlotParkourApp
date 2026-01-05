@@ -137,7 +137,7 @@ export default function Courses () {
             </TableContainer>
             <TableContainer>
                 <H2>[Course name]</H2>
-                <table>
+                <table className="mb-[.5rem]">
                     <tr>
                         <td>Date added:</td>
                         <td>–</td>

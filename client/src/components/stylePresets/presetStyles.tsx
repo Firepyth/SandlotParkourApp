@@ -28,7 +28,7 @@ export const TBody = ({children, className = ''}: {children: React.ReactNode, cl
 
 export const PlayerImg = ({className = '', player_id, player_name}: {className?: string, player_id: string | undefined, player_name: string}) => {
     if (player_id === undefined) return <div className={`border-[2px] border-[#404040] mr-[.5rem] my-auto align-middle ${className}`}></div>
-    return <img className={`border-[2px] border-[#404040] mr-[.5rem] my-auto ${className}`} src={player_id !== undefined ? `https://mc-heads.net/avatar/${player_id}` : undefined} alt={player_name}/>
+    return <img className={`border-[2px] border-[#404040] mr-[.5rem] my-auto pointer-events-none ${className}`} src={player_id !== undefined ? `https://mc-heads.net/avatar/${player_id}` : undefined} alt={player_name}/>
 }
 
 export const Link = ({children, className = '', to, state = undefined}: {children: React.ReactNode, className?: string, to: string, state?: object}) => {

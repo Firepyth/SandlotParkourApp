@@ -128,7 +128,7 @@ export default function Players () {
                     <Pager pagerParams={pagerParams}/>
                 }
             </TableContainer>
-            <Content className="flex-col">
+            <Content className="flex-col w-[24rem]">
                 <PlayerDetailsTable />
             </Content>
         </Content>

@@ -15,7 +15,7 @@ export default function TableRow ({children, className = '', route = null, setSh
         navigate(route)
     }
 
-    return <tr className={`${className}`} onClick={route ? () => {handleNavigate(route)} : undefined}>
+    return <tr className={`${className}`} onClick={route ? () => {handleNavigate(route)} : undefined} tabIndex={route ? 0 : undefined}>
         {children}
     </tr>
 }

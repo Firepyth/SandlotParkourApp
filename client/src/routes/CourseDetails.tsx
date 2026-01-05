@@ -9,7 +9,7 @@ import TableRow from '../components/stylePresets/TableRow';
 import LoadingMsg from '../components/LoadingMsg';
 import ErrorMsg from '../components/ErrorMsg';
 import Pager from '../components/Pager';
-import { PlayerImg, Table, TableContainer, TBody, THead } from '../components/stylePresets/presetStyles';
+import { Content, H1, PlayerImg, Table, TableContainer, TBody, THead, Link, H2 } from '../components/stylePresets/presetStyles';
 
 interface Course {
     course_name: string;
@@ -65,8 +65,8 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
                 <TableCell>
                     {courseTime.rank}
                 </TableCell>
-                <TableCell className="flex min-w-[16ch] items-center">
-                    <PlayerImg player_id={courseTime.player_id} player_name={courseTime.player_name}/>
+                <TableCell>
+                    <PlayerImg player_id={courseTime.player_id} player_name={courseTime.player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
                     {courseTime.player_name}
                 </TableCell>
                 <TableCell>
@@ -108,7 +108,7 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
         maxItems: data?.matched_completions
     }
 
-    return <TableContainer>
+    return <>
         <Search searchParams={searchParams} id="course-player-search"/>
         <Table>
             <THead>
@@ -136,7 +136,7 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
         {isPending ? '' : error ? '' :
             <Pager pagerParams={pagerParams}/>
         }
-    </TableContainer>
+    </>
 }
 
 export default function CourseDetails () {
@@ -152,42 +152,54 @@ export default function CourseDetails () {
     if (error) return <p>Error retrieving data.</p>;
 
     return <>
-        <h1>Course Stats</h1>
-        <h2>{toTitle(data.course_name)}</h2>
-        <table>
-            <tr>
-                <td>Date added:</td>
-                <td>{toDate(data.course_created)}</td>
-            </tr>
-            <tr>
-                <td>Total completions:</td>
-                <td>{data.total_completions ? data.total_completions : '–'}</td>
-            </tr>
-            <tr>
-                <td>Players completed:</td>
-                <td>{data.total_completions ? data.unique_completions : '–'}</td>
-            </tr>
-            <tr>
-                <td colSpan={3}>Fastest player:</td>
-            </tr>
-            <tr>
-                <td onClick={data.total_completions ? () => navigate(`/players/${data.fastest_player_id}/${id}`) : undefined} className="flex cursor-pointer">
-                    <PlayerImg 
-                        player_id={data.total_completions ? data.fastest_player_id : undefined}
-                        player_name={data.total_completions ? data.fastest_player_name : ''}/>
-                    {data.total_completions ? data.fastest_player_name : '–'}
-                </td>
-                <td>{data.total_completions ? toTime(data.fastest_time) : '00:00:00.000'}</td>
-                <td>({data.total_completions ? data.fastest_deaths : '–'} deaths)</td>
-            </tr>
-            <tr>
-                <td>Average first time:</td>
-                <td>{data.total_completions ? toTime(data.avg_first_time) : '00:00:00.000'}</td>
-                <td>({data.total_completions ? Number(data.avg_first_deaths).toFixed(1) : '–'} deaths)</td>
-            </tr>
-        </table>
-        
-        
-        <CourseDetailsTable id={Number(id)}/>
+        <H1>Course Stats</H1>
+        <Content className="gap-[3.2%]">
+            <TableContainer className="w-11/20">
+                <H2>Record Progression</H2>
+                <div className="bg-[#333333] w-full h-full rounded-[.25rem]">
+
+                </div>
+            </TableContainer>
+            <TableContainer>
+                <H2>{toTitle(data.course_name)}</H2>
+                <table className="mb-[.5rem]">
+                    <tr>
+                        <td>Date added:</td>
+                        <td>{toDate(data.course_created)}</td>
+                    </tr>
+                    <tr>
+                        <td>Total completions:</td>
+                        <td>{data.total_completions ? data.total_completions : '–'}</td>
+                    </tr>
+                    <tr>
+                        <td>Players completed:</td>
+                        <td>{data.total_completions ? data.unique_completions : '–'}</td>
+                    </tr>
+                    <tr>
+                        <td colSpan={3}>Fastest player:</td>
+                    </tr>
+                    <tr>
+                        <td onClick={data.total_completions ? () => navigate(`/players/${data.fastest_player_id}/${id}`) : undefined} className="flex cursor-pointer">
+                            <Link to={data.total_completions ? `/players/${data.fastest_player_id}/${id}` : ''}>
+                                <PlayerImg 
+                                    player_id={data.total_completions ? data.fastest_player_id : undefined}
+                                    player_name={data.total_completions ? data.fastest_player_name : ''}
+                                    className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.5rem]"/>
+                                {data.total_completions ? data.fastest_player_name : '–'}
+                            </Link>
+                        </td>
+                        <td>{data.total_completions ? toTime(data.fastest_time) : '00:00:00.000'}</td>
+                        <td>({data.total_completions ? data.fastest_deaths : '–'} deaths)</td>
+                    </tr>
+                    <tr>
+                        <td>Average first time:</td>
+                        <td>{data.total_completions ? toTime(data.avg_first_time) : '00:00:00.000'}</td>
+                        <td>({data.total_completions ? Number(data.avg_first_deaths).toFixed(1) : '–'} deaths)</td>
+                    </tr>
+                </table>
+                
+                <CourseDetailsTable id={Number(id)}/>
+            </TableContainer>
+        </Content>
     </>
 }
