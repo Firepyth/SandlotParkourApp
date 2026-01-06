@@ -44,7 +44,7 @@ export default function Main () {
                 <Link className="mt-[1.5rem] uppercase text-[.75em]/[1em] tracking-[.1em]" to="/players" state={{showTop: true}}>View more</Link>
             </TableContainer>
             <TableContainer className="w-full">
-                <H2>Recently courses</H2>
+                <H2>Recent courses</H2>
                 <Table>
                     <THead>
                         <TableRow>

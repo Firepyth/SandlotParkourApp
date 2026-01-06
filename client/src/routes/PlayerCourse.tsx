@@ -9,6 +9,7 @@ import ErrorMsg from '../components/ErrorMsg';
 import TableRow from '../components/stylePresets/TableRow';
 import Pager from '../components/Pager';
 import { Content, H1, H2, Link, PlayerImg, Table, TableContainer, TBody, THead } from '../components/stylePresets/presetStyles';
+import createPath from '../helpers/createPath';
 
 interface PlayerCourse {
     leaderboard_position: number;
@@ -22,6 +23,11 @@ interface PlayerCourse {
     course_name: string;
     player_id: string;
     player_name: string;
+    personal_bests: {
+        time: number;
+        achieved: string;
+        deaths: number;
+    }[]
 }
 
 interface PlayerCourseTimes {
@@ -122,39 +128,55 @@ export default function PlayerCourse () {
     if (isPending) return <p>Loading...</p>;
     if (error) return <p>Error retrieving data.</p>;
 
+    if (data.course_name === undefined) {
+        return <>
+            <H1>Error 404</H1>
+            <Content>
+                <H2>No completions on course {course_id} found by {player_id}. <Link to="/courses">Go back to courses.</Link></H2>
+            </Content>
+        </>
+    }
+
     return <>
         <H1>Player Stats by Course</H1>
         <Content className="gap-[3.2%]">
             <TableContainer className="w-1/2">
                 <H2>Personal Best Progression</H2>
-                <div className="bg-[#333333] w-full h-full rounded-[.25rem]">
-
+                <div className="bg-[#333333] w-full h-full rounded-[.25rem] p-[1rem] flex flex-col flex-[1_1_auto] overflow-hidden">
+                    <svg viewBox='0 0 1000 1000' className="w-full h-full" preserveAspectRatio="slice">
+                        <g stroke="#d41b36" fill="none" strokeWidth=".25rem" strokeLinecap="round" strokeLinejoin="round">
+                            {createPath(data.personal_bests)}
+                        </g>
+                    </svg>
                 </div>
             </TableContainer>
             <div className="flex flex-col flex-[1_1_auto] overflow-hidden">
-                <H2 className="cursor-pointer"><Link to={`/courses/${course_id}`}>{toTitle(data.course_name)}</Link></H2>
+                <H2>
+                    <Link className="inline cursor-pointer" to={`/players?playerId=${player_id}`}><PlayerImg player_id={data.player_id} player_name={data.player_name} className="inline-block w-[1.5rem] h-[1.5rem]"/>{data.player_name}</Link> on <Link className="inline cursor-pointer" to={`/courses/${course_id}`}>{toTitle(data.course_name)}</Link>
+                </H2>
                 <TableContainer>
-                    <Link className="flex cursor-pointer" to={`/players?playerId=${player_id}`}><H2><PlayerImg player_id={data.player_id} player_name={data.player_name} className="inline-block w-[1.5rem] h-[1.5rem]"/>{data.player_name}</H2></Link>
                     <table className="mb-[.5rem]">
-                        <tr>
-                            <td className="pb-[1rem]">Highest rank:</td>
-                            <td className="pb-[1rem]">{data.leaderboard_position}</td>
-                        </tr>
-                        <tr>
-                            <td>Fastest time:</td>
-                            <td>{toTime(data.fastest_time)}</td>
-                            <td>({data.fastest_deaths} deaths)</td>
-                        </tr>
-                        <tr>
-                            <td>Average time:</td>
-                            <td>{toTime(data.avg_time)}</td>
-                            <td>({Number(data.avg_deaths).toFixed(1)} deaths)</td>
-                        </tr>
-                        <tr>
-                            <td className="pb-[1rem]">First time:</td>
-                            <td className="pb-[1rem]">{toTime(data.first_time)}</td>
-                            <td className="pb-[1rem]">({data.first_deaths} deaths)</td>
-                        </tr>
+                        <tbody>
+                            <tr>
+                                <td className="pb-[1rem] font-bold">Highest rank:</td>
+                                <td className="pb-[1rem]">{data.leaderboard_position}</td>
+                            </tr>
+                            <tr>
+                                <td className="font-bold">Fastest time:</td>
+                                <td>{toTime(data.fastest_time)}</td>
+                                <td>({data.fastest_deaths} deaths)</td>
+                            </tr>
+                            <tr>
+                                <td className="font-bold">Average time:</td>
+                                <td>{toTime(data.avg_time)}</td>
+                                <td>({Number(data.avg_deaths).toFixed(1)} deaths)</td>
+                            </tr>
+                            <tr>
+                                <td className="pb-[1rem] font-bold">First time:</td>
+                                <td className="pb-[1rem]">{toTime(data.first_time)}</td>
+                                <td className="pb-[1rem]">({data.first_deaths} deaths)</td>
+                            </tr>
+                        </tbody>
                     </table>
                     {player_id && course_id ? <PlayerCourseTable player_id={player_id} course_id={Number(course_id)} total_completions={data.total_completions}/> : ''}
                 </TableContainer>

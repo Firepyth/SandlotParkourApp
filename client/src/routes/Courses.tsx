@@ -64,8 +64,8 @@ export default function Courses () {
                     {toTime(course.fastest_time)}
                 </TableCell>
                 <TableCell>
-                    <PlayerImg player_id={course.fastest_player_id} player_name={course.fastest_player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
-                    {course.fastest_player_name}
+                    <PlayerImg player_id={course.fastest_player_id || undefined} player_name={course.fastest_player_name || ''} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
+                    {course.fastest_player_name || '–'}
                 </TableCell>
             </TableRow>
         });
@@ -140,31 +140,34 @@ export default function Courses () {
                 <TableContainer>
                     
                     <table className="mb-[.5rem]">
-                        <tr>
-                            <td>Date added:</td>
-                            <td>–</td>
-                        </tr>
-                        <tr>
-                            <td>Total completions:</td>
-                            <td>–</td>
-                        </tr>
-                        <tr>
-                            <td>Players completed:</td>
-                            <td>–</td>
-                        </tr>
-                        <tr>
-                            <td colSpan={3}>Fastest player:</td>
-                        </tr>
-                        <tr>
-                            <td><img src={undefined} alt="" className="w-[24px] h-[24px] inline"/> –</td>
-                            <td>00:00:00.000</td>
-                            <td>(– deaths)</td>
-                        </tr>
-                        <tr>
-                            <td>Average first time:</td>
-                            <td>00:00:00.000</td>
-                            <td>(– deaths)</td>
-                        </tr>
+                        <tbody>
+                            <tr>
+                                <td className="font-bold">Date added:</td>
+                                <td>–</td>
+                            </tr>
+                            <tr>
+                                <td className="font-bold">Total completions:</td>
+                                <td>–</td>
+                            </tr>
+                            <tr>
+                                <td className="font-bold pb-[1rem]">Players completed:</td>
+                                <td className="pb-[1rem]">–</td>
+                            </tr>
+                            <tr>
+                                <td className="font-bold">Fastest player:</td>
+                                <td><PlayerImg player_id={undefined} player_name="" className="w-[1.5rem] h-[1.5rem] inline-block mt-[-.125rem]"/> –</td>
+                            </tr>
+                            <tr>
+                                <td className="font-bold">Fastest time:</td>
+                                <td>00:00:00.000</td>
+                                <td>(– deaths)</td>
+                            </tr>
+                            <tr>
+                                <td className="font-bold pb-[1rem]">Average first time:</td>
+                                <td className="pb-[1rem]">00:00:00.000</td>
+                                <td className="pb-[1rem]">(– deaths)</td>
+                            </tr>
+                        </tbody>
                     </table>
                     <Content className="flex-col">
                         <Search id="" />
@@ -185,9 +188,13 @@ export default function Courses () {
                                     </TableHeading>
                                 </TableRow>
                             </THead>
-                            <tbody>
-                                
-                            </tbody>
+                            <TBody>
+                                <TableRow>
+                                    <TableCell colSpan={4}>
+                                        Select a course to view top times.
+                                    </TableCell>
+                                </TableRow>
+                            </TBody>
                         </Table>
                         <Pager pagerParams={{page: 1, setPage: () => {}, queryClient, maxItems: 1, queryKey: "blank"}}/>
                     </Content>

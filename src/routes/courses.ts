@@ -123,6 +123,10 @@ router.get('/', async function(req, res, next) {
 
 router.get('/:course_id', async function(req, res, next) {
     try {
+        if (parseInt(req.params.course_id).toString() !== req.params.course_id) {
+            return res.status(404).json({ error: `No courses found with the ID ${req.params.course_id}` });
+        }
+
         const result: Course[] = await prisma.$queryRaw`
             SELECT
                 course.name AS course_name,
@@ -173,7 +177,7 @@ router.get('/:course_id', async function(req, res, next) {
                     JSON_AGG(
                         JSON_BUILD_OBJECT(
                             'time', time,
-                            'time_achieved', time_achieved,
+                            'achieved', achieved,
                             'player_id', player_id,
                             'player_name', player_name,
                             'deaths', deaths
@@ -183,7 +187,7 @@ router.get('/:course_id', async function(req, res, next) {
                     SELECT
                         DISTINCT ON (MIN(time) OVER (ORDER BY achieved))
                         MIN(time) OVER (ORDER BY achieved) AS time,
-                        achieved AS time_achieved, 
+                        achieved, 
                         time."playerId" AS player_id,
                         player.name AS player_name,
                         deaths
@@ -208,6 +212,10 @@ router.get('/:course_id', async function(req, res, next) {
 
 router.get('/completions/:course_id', async function(req, res, next) {
     try {
+        if (parseInt(req.params.course_id).toString() !== req.params.course_id) {
+            return res.status(404).json({ error: `No courses found with the ID ${req.params.course_id}` });
+        }
+        
         const course: boolean = await checkForCourse(req.params.course_id);
         if (course === false) {
             return res.status(404).json({ error: `No courses found with the ID ${req.params.course_id}` });

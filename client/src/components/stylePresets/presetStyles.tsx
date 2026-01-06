@@ -32,7 +32,7 @@ export const PlayerImg = ({className = '', player_id, player_name}: {className?:
 }
 
 export const Link = ({children, className = '', to, state = undefined}: {children: React.ReactNode, className?: string, to: string, state?: object}) => {
-    return <p className={`${className}`}><ReactLink className="text-[#ff8066] underline" to={to} state={state}>{children}</ReactLink></p>
+    return <div className={`${className}`}><ReactLink className="text-[#ff8066] underline" to={to} state={state}>{children}</ReactLink></div>
 }
 
 export const Content = ({children, className = ''}: {children: React.ReactNode, className?: string}) => {

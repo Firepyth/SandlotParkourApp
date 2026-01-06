@@ -149,8 +149,8 @@ export const PlayerDetailsTable = () => {
     }
 
     return <>
-        <PlayerImg player_id={id !== '' ? id : undefined} player_name={isPending || error ? '' : data.player_name} className="w-[4rem] h-[4rem] mb-[.5rem]"/>
-        <H2>{isPending || error ? '[Player name]' : data.player_name}</H2>
+        <PlayerImg player_id={id !== ''  && data?.player_name !== undefined ? id : undefined} player_name={isPending || error ? '' : data.player_name} className="w-[4rem] h-[4rem] mb-[.5rem]"/>
+        <H2>{isPending || error || data.player_name === undefined ? '[Player name]' : data.player_name}</H2>
         <TableContainer>
             <Search searchParams={searchParams} id="player-course-search"/>
             <div className="border-b-[2px] border-[#404040] pb-[.5rem] mb-[.5rem] mt-[-.5rem] flex items-center">
@@ -177,7 +177,9 @@ export const PlayerDetailsTable = () => {
                     </TableRow>
                 </THead>
                 <TBody>
-                    {isPending ? <LoadingMsg colSpan={4}/> : error ? <ErrorMsg colSpan={4} /> :
+                    {isPending ? <LoadingMsg colSpan={4}/> : 
+                     error ? <ErrorMsg colSpan={4} /> :
+                     data.player_name === undefined ? <TableRow><TableCell colSpan={4}>No player with ID {id}</TableCell></TableRow> :
                         loadCourses(data.completions || [])
                     }
                 </TBody>

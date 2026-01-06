@@ -25,6 +25,10 @@ interface PlayerCourseTime {
 
 router.get('/:player_id/:course_id', async function(req, res, next) {
     try {
+        if (parseInt(req.params.course_id).toString() !== req.params.course_id) {
+            return res.status(404).json({ error: `No player with the ID ${req.params.player_id} has completed course ${req.params.course_id}` });
+        }
+
         const result: PlayerCourse[] = await prisma.$queryRaw`
             SELECT
                 a.leaderboard_position,
@@ -97,20 +101,20 @@ router.get('/:player_id/:course_id', async function(req, res, next) {
                     JSON_AGG (
                         JSON_BUILD_OBJECT (
                             'time', time,
-                            'wrong_time', wrong_time,
-                            achieved, achieved
+                            'achieved', achieved,
+                            'deaths', deaths
                         )
                     ) AS personal_bests
                 FROM (
                     SELECT
                         DISTINCT ON (MIN(time) OVER (ORDER BY achieved))
                         MIN(time) OVER (ORDER BY achieved) AS time,
-                        time AS wrong_time,
+                        deaths,
                         achieved
                     FROM time
                     WHERE 
-                        "courseId" = 25 AND
-                        "playerId" = '2678f0bfa3c348bcaf7017f2f54d4305'
+                        "courseId" = ${req.params.course_id} AND
+                        "playerId" = ${req.params.player_id}
                     ORDER BY MIN(time) OVER (ORDER BY achieved) DESC, achieved
                 )
             ) e ON 1 = 1
@@ -129,6 +133,10 @@ router.get('/:player_id/:course_id', async function(req, res, next) {
 
 router.get('/completions/:player_id/:course_id', async function(req, res, next) {
     try {
+        if (parseInt(req.params.course_id).toString() !== req.params.course_id) {
+            return res.status(404).json({ error: `No player with the ID ${req.params.player_id} has completed course ${req.params.course_id}` });
+        }
+
         let sort: string | boolean = getSort(
             [
                 "time",
