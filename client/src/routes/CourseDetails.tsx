@@ -209,13 +209,10 @@ export default function CourseDetails () {
                                             {data.fastest_player_name}
                                         </Link>
                                         :
-                                        <p>
-                                            <PlayerImg 
-                                                player_id={undefined}
-                                                player_name={''}
-                                                className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.5rem]"/>
-                                            –
-                                        </p>
+                                        <><PlayerImg 
+                                            player_id={undefined}
+                                            player_name={''}
+                                            className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.5rem]"/> –</>
                                     }
                                 </td>
                             </tr>

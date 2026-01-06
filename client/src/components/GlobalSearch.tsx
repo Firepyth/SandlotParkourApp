@@ -50,7 +50,7 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
 
         const rows = data.map((item: SearchResult) => {
             if (item.course_id === null) return;
-            return <TableRow route={`/courses/${item.course_id}`} className="cursor-pointer" setShowSearch={setShowSearch}>
+            return <TableRow route={`/courses/${item.course_id}`} className="cursor-pointer" setShowSearch={setShowSearch} key={item.course_id}>
                 <TableCell>
                     {toTitle(item.course_name || '')}
                 </TableCell>
@@ -60,7 +60,6 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
         if (rows.length === 0) {
             return noResult;
         }
-        console.log(rows);
 
         return rows;
     }
@@ -78,7 +77,7 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
 
         const rows = data.map((item: SearchResult) => {
             if (item.player_id === null) return;
-            return <TableRow route={`/players?playerId=${item.player_id}`} className="cursor-pointer" setShowSearch={setShowSearch}>
+            return <TableRow route={`/players?playerId=${item.player_id}`} className="cursor-pointer" setShowSearch={setShowSearch} key={item.player_id}>
                 <TableCell>
                     <PlayerImg player_id={item.player_id || ''} player_name={item.player_name || ''} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
                     {item.player_name}
@@ -89,7 +88,6 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
         if (rows.length === 0) {
             return noResult;
         }
-        console.log(rows);
 
         return rows;
     }
@@ -99,9 +97,11 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
         <div className="flex gap-[1rem]">
             <Table className="w-full h-[8.9375rem]" strictHeight={true}>
                 <THead>
-                    <TableHeading>
-                        Player name
-                    </TableHeading>
+                    <TableRow>
+                        <TableHeading>
+                            Player name
+                        </TableHeading>
+                    </TableRow>
                 </THead>
                 <TBody>
                     {isPending ? <LoadingMsg /> : error ? <ErrorMsg /> : loadPlayers(data)}
@@ -109,9 +109,11 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
             </Table>
             <Table className="w-full h-[8.9375rem]" strictHeight={true}>
                 <THead>
-                    <TableHeading>
-                        Course name
-                    </TableHeading>
+                    <TableRow>
+                        <TableHeading>
+                            Course name
+                        </TableHeading>
+                    </TableRow>
                 </THead>
                 <TBody>
                     {isPending ? <LoadingMsg /> : error ? <ErrorMsg /> : loadCourses(data)}
