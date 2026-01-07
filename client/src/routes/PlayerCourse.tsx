@@ -162,33 +162,58 @@ export default function PlayerCourse () {
             </TableContainer>
             <div className="flex flex-col flex-[1_1_auto] overflow-hidden max-w-[39.8%] min-w-[39.8%]">
                 <H2>
-                    <Link className="inline cursor-pointer" to={`/players?playerId=${player_id}`}><PlayerImg player_id={isLoaded ? data.player_id : undefined} player_name={isLoaded ? data.player_name : ''} className="inline-block w-[1.5rem] h-[1.5rem]"/>{isLoaded ? data.player_name : '[Player name]'}</Link> on <Link className="inline cursor-pointer" to={`/courses/${course_id}`}>{isLoaded ? toTitle(data.course_name) : '[Course name]'}</Link>
+                    <Link className="inline cursor-pointer" to={`/players?playerId=${player_id}`}><PlayerImg player_id={isLoaded ? data.player_id : undefined} player_name={isLoaded ? data.player_name : ''} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.375rem]"/>{isLoaded ? data.player_name : '[Player name]'}</Link> on <Link className="inline cursor-pointer" to={`/courses/${course_id}`}>{isLoaded ? toTitle(data.course_name) : '[Course name]'}</Link>
                 </H2>
                 <TableContainer>
                     {!isLoaded ? 
-                        <table className="mb-[.5rem]">
-                            <tbody>
-                                <tr>
-                                    <td className="pb-[1rem] font-bold">Highest rank:</td>
-                                    <td className="pb-[1rem]">–</td>
-                                </tr>
-                                <tr>
-                                    <td className="font-bold">Fastest time:</td>
-                                    <td>–</td>
-                                    <td>–</td>
-                                </tr>
-                                <tr>
-                                    <td className="font-bold">Average time:</td>
-                                    <td>–</td>
-                                    <td>–</td>
-                                </tr>
-                                <tr>
-                                    <td className="pb-[1rem] font-bold">First time:</td>
-                                    <td className="pb-[1rem]">–</td>
-                                    <td className="pb-[1rem]">–</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <>
+                            <table className="mb-[.5rem]">
+                                <tbody>
+                                    <tr>
+                                        <td className="pb-[1rem] font-bold">Highest rank:</td>
+                                        <td className="pb-[1rem]">–</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="font-bold">Fastest time:</td>
+                                        <td>–</td>
+                                        <td>–</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="font-bold">Average time:</td>
+                                        <td>–</td>
+                                        <td>–</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="pb-[1rem] font-bold">First time:</td>
+                                        <td className="pb-[1rem]">–</td>
+                                        <td className="pb-[1rem]">–</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <Table>
+                                <THead>
+                                    <TableRow>
+                                        <TableHeading fakeSort={true}>
+                                            Time
+                                        </TableHeading>
+                                        <TableHeading fakeSort={true}>
+                                            Deaths
+                                        </TableHeading>
+                                        <TableHeading fakeSort={true}>
+                                            Date
+                                        </TableHeading>
+                                    </TableRow>
+                                </THead>
+                                <TBody>
+                                    <TableRow>
+                                        <TableCell colSpan={3}>
+                                            {isPending ? 'Loading...' : error ? 'Error loading data.' : ''}
+                                        </TableCell>
+                                    </TableRow>
+                                </TBody>
+                            </Table>
+                            <Pager pagerParams={{page: 1, maxItems: 1}}/>
+                        </>
                     :
                         <>
                             <table className="mb-[.5rem]">

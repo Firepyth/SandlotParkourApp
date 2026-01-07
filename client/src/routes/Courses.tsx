@@ -132,9 +132,7 @@ export default function Courses () {
                         }
                     </TBody>
                 </Table>
-                {isPending ? '' : error ? '' :
-                    <Pager pagerParams={pagerParams}/>
-                }
+                <Pager pagerParams={isPending || error ? {page: 1, maxItems: 1} : pagerParams}/>
             </TableContainer>
             <div className="flex flex-col flex-[1_1_auto] overflow-hidden max-w-[39.8%] min-w-[39.8%]">
                 <H2>[Course name]</H2>

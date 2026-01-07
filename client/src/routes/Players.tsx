@@ -124,9 +124,7 @@ export default function Players () {
                         }
                     </TBody>
                 </Table>
-                {isPending ? '' : error ? '' :
-                    <Pager pagerParams={pagerParams}/>
-                }
+                <Pager pagerParams={isPending || error ? {page: 1, maxItems: 1} : pagerParams}/>
             </TableContainer>
             <Content className="flex-col max-w-[39.8%] min-w-[39.8%]">
                 <PlayerDetailsTable />

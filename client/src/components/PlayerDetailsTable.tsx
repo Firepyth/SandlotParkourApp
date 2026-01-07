@@ -184,7 +184,7 @@ export const PlayerDetailsTable = () => {
                     }
                 </TBody>
             </Table>
-                <Pager pagerParams={pagerParams}/>
+            <Pager pagerParams={pagerParams}/>
         </TableContainer>
     </>
 }
