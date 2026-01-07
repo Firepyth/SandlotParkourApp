@@ -13,7 +13,7 @@ export const TableContainer = ({children, className = '', onClick = undefined}: 
 }
 
 export const Table = ({children, className = '', strictHeight = false}: {children: React.ReactNode, className?: string, strictHeight?: boolean}) => {
-    return <div className={`overflow-y-scroll ${strictHeight ? '' : 'h-full'} flex-[1_1_auto] border-b-[2px] border-[#404040] ${className}`} style={{scrollbarGutter: 'stable'}}>
+    return <div className={`overflow-y-auto ${strictHeight ? '' : 'h-full'} flex-[1_1_auto] border-b-[2px] border-[#404040] ${className}`}>
         <table className="w-full">{children}</table>
     </div>
 }

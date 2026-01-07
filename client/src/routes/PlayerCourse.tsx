@@ -161,7 +161,7 @@ export default function PlayerCourse () {
                 <H2>Personal Best Progression</H2>
                 <Graph graphParams={graphParams}/>
             </TableContainer>
-            <div className="flex flex-col flex-[1_1_auto] overflow-hidden">
+            <div className="flex flex-col flex-[1_1_auto] overflow-hidden max-w-[39.8%] min-w-[39.8%]">
                 <H2>
                     <Link className="inline cursor-pointer" to={`/players?playerId=${player_id}`}><PlayerImg player_id={data.player_id} player_name={data.player_name} className="inline-block w-[1.5rem] h-[1.5rem]"/>{data.player_name}</Link> on <Link className="inline cursor-pointer" to={`/courses/${course_id}`}>{toTitle(data.course_name)}</Link>
                 </H2>

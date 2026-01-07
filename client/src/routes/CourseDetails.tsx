@@ -192,7 +192,7 @@ export default function CourseDetails () {
                 <H2>Record Progression</H2>
                 <Graph graphParams={graphParams}/>
             </TableContainer>
-            <div className="flex flex-col flex-[1_1_auto] overflow-hidden">
+            <div className="flex flex-col flex-[1_1_auto] overflow-hidden max-w-[39.8%] min-w-[39.8%]">
                 <H2>{toTitle(data.course_name)}</H2>
                 <TableContainer>
                     <table className="mb-[.5rem]">
