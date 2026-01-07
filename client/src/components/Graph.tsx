@@ -23,7 +23,9 @@ interface GraphParams {
         id?: number;
         navigate?: NavigateFunction;
         completions: Completion[];
-    }
+    },
+    isPending: boolean;
+    error: Error | null;
 }
 
 const createPath = (completions: Completion[], width: number, height: number, setHoverContent: Function | undefined = undefined, navigate: NavigateFunction | undefined = undefined, course_id: number = 0) => {
@@ -173,7 +175,7 @@ const createPath = (completions: Completion[], width: number, height: number, se
     </>
 }
 
-export default function Graph ({graphParams: {hoverContent, completions, setHoverContent, navigate, id}}: GraphParams) {
+export default function Graph ({graphParams: {hoverContent, completions, setHoverContent, navigate, id}, isPending, error}: GraphParams) {
     const ref = useRef<HTMLInputElement | null>(null);
     const [dimensions, setDimensions] = useState<{width: number, height: number}>();
 
@@ -206,11 +208,13 @@ export default function Graph ({graphParams: {hoverContent, completions, setHove
             <p>{toDate(hoverContent.achieved)}</p>
         </div> : ''}
         <div ref={ref} className="bg-[#333333] w-full h-full rounded-[.25rem] p-[1rem] flex flex-col flex-[1_1_auto] overflow-hidden">
-            <svg viewBox={`0 0 ${dimensions !== undefined ? dimensions.width * 1.5 : 0} ${dimensions !== undefined ? dimensions.height * 1.5: 0}`}>
-                <g stroke="#d41b36" fill="none" strokeWidth=".25rem" strokeLinecap="round" strokeLinejoin="round">
-                    {dimensions !== undefined ? createPath(completions, dimensions.width * 1.5, dimensions.height * 1.5, setHoverContent, navigate, id !== undefined ? Number(id) : 0) : ''}
-                </g>
-            </svg>
+            {isPending ? <p>Loading...</p> : error ? <p>Error loading data.</p> :
+                <svg viewBox={`0 0 ${dimensions !== undefined ? dimensions.width * 1.5 : 0} ${dimensions !== undefined ? dimensions.height * 1.5: 0}`}>
+                    <g stroke="#d41b36" fill="none" strokeWidth=".25rem" strokeLinecap="round" strokeLinejoin="round">
+                        {dimensions !== undefined ? createPath(completions, dimensions.width * 1.5, dimensions.height * 1.5, setHoverContent, navigate, id !== undefined ? Number(id) : 0) : ''}
+                    </g>
+                </svg>
+            }
         </div>
     </>
 }

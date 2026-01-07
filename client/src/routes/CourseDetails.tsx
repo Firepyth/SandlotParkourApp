@@ -11,6 +11,7 @@ import ErrorMsg from '../components/ErrorMsg';
 import Pager from '../components/Pager';
 import { Content, H1, PlayerImg, Table, TableContainer, TBody, THead, Link, H2 } from '../components/stylePresets/presetStyles';
 import Graph from '../components/Graph';
+import PlaceholderCourseTable from '../components/PlaceholderCourseTable';
 
 interface Course {
     course_name: string;
@@ -165,10 +166,9 @@ export default function CourseDetails () {
         queryFn: (): Promise<Course> => fetch(`${import.meta.env.VITE_API_URL}/courses/${id}`).then(r => r.json())
     });
 
-    if (isPending) return <p>Loading...</p>;
-    if (error) return <p>Error retrieving data.</p>;
+    const isLoaded = !isPending && !error;
 
-    if (data.course_name === undefined) {
+    if (isLoaded && data.course_name === undefined) {
         return <>
             <H1>Error 404</H1>
             <Content>
@@ -182,64 +182,66 @@ export default function CourseDetails () {
         id: Number(id),
         hoverContent,
         setHoverContent,
-        completions: data.records
+        completions: isLoaded ? data.records : [{time: 0, achieved: '', player_id: '', player_name: '', deaths: 0}]
     }
 
     return <>
         <H1>Course Stats</H1>
         <Content className="gap-[3.2%]">
-            <TableContainer className="w-11/20">
+            <TableContainer>
                 <H2>Record Progression</H2>
-                <Graph graphParams={graphParams}/>
+                <Graph graphParams={graphParams} isPending={isPending} error={error}/>
             </TableContainer>
             <div className="flex flex-col flex-[1_1_auto] overflow-hidden max-w-[39.8%] min-w-[39.8%]">
-                <H2>{toTitle(data.course_name)}</H2>
+                <H2>{isLoaded ? toTitle(data.course_name) : '[Course name]'}</H2>
                 <TableContainer>
-                    <table className="mb-[.5rem]">
-                        <tbody>
-                            <tr>
-                                <td className="font-semibold">Date added:</td>
-                                <td>{toDate(data.course_created)}</td>
-                            </tr>
-                            <tr>
-                                <td className="font-semibold">Total completions:</td>
-                                <td>{data.total_completions ? data.total_completions : '–'}</td>
-                            </tr>
-                            <tr>
-                                <td className="font-semibold pb-[1rem]">Players completed:</td>
-                                <td className="pb-[1rem]">{data.total_completions ? data.unique_completions : '–'}</td>
-                            </tr>
-                            <tr>
-                                <td className="font-semibold">Fastest player:</td>
-                                <td>
-                                    {data.total_completions ?
-                                        <Link to={`/players/${data.fastest_player_id}/${id}`}>
-                                            <PlayerImg 
-                                                player_id={data.fastest_player_id}
-                                                player_name={data.fastest_player_name}
-                                                className="inline-block w-[1.5rem] h-[1.5rem]"/>
-                                            {data.fastest_player_name}
-                                        </Link>
-                                        :
-                                        <><PlayerImg 
-                                            player_id={undefined}
-                                            player_name={''}
-                                            className="inline-block w-[1.5rem] h-[1.5rem]"/> –</>
-                                    }
-                                </td>
-                            </tr>
-                            <tr>
-                                <td className="font-semibold">Fastest time:</td>
-                                <td>{data.total_completions ? toTime(data.fastest_time) : '00:00:00.000'}</td>
-                                <td>({data.total_completions ? data.fastest_deaths : '–'} deaths)</td>
-                            </tr>
-                            <tr>
-                                <td className="font-semibold pb-[1rem]">Average first time:</td>
-                                <td className="pb-[1rem]">{data.total_completions ? toTime(data.avg_first_time) : '00:00:00.000'}</td>
-                                <td className="pb-[1rem]">({data.total_completions ? Number(data.avg_first_deaths).toFixed(1) : '–'} deaths)</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    {!isLoaded ? <PlaceholderCourseTable /> :
+                        <table className="mb-[.5rem]">
+                            <tbody>
+                                <tr>
+                                    <td className="font-semibold">Date added:</td>
+                                    <td>{toDate(data.course_created)}</td>
+                                </tr>
+                                <tr>
+                                    <td className="font-semibold">Total completions:</td>
+                                    <td>{data.total_completions ? data.total_completions : '–'}</td>
+                                </tr>
+                                <tr>
+                                    <td className="font-semibold pb-[1rem]">Players completed:</td>
+                                    <td className="pb-[1rem]">{data.total_completions ? data.unique_completions : '–'}</td>
+                                </tr>
+                                <tr>
+                                    <td className="font-semibold">Fastest player:</td>
+                                    <td>
+                                        {data.total_completions ?
+                                            <Link to={`/players/${data.fastest_player_id}/${id}`}>
+                                                <PlayerImg 
+                                                    player_id={data.fastest_player_id}
+                                                    player_name={data.fastest_player_name}
+                                                    className="inline-block w-[1.5rem] h-[1.5rem]"/>
+                                                {data.fastest_player_name}
+                                            </Link>
+                                            :
+                                            <><PlayerImg 
+                                                player_id={undefined}
+                                                player_name={''}
+                                                className="inline-block w-[1.5rem] h-[1.5rem]"/> –</>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td className="font-semibold">Fastest time:</td>
+                                    <td>{data.total_completions ? toTime(data.fastest_time) : '00:00:00.000'}</td>
+                                    <td>({data.total_completions ? data.fastest_deaths : '–'} deaths)</td>
+                                </tr>
+                                <tr>
+                                    <td className="font-semibold pb-[1rem]">Average first time:</td>
+                                    <td className="pb-[1rem]">{data.total_completions ? toTime(data.avg_first_time) : '00:00:00.000'}</td>
+                                    <td className="pb-[1rem]">({data.total_completions ? Number(data.avg_first_deaths).toFixed(1) : '–'} deaths)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    }
                     
                     <CourseDetailsTable id={Number(id)}/>
                 </TableContainer>

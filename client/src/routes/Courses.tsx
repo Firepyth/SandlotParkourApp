@@ -10,6 +10,7 @@ import ErrorMsg from '../components/ErrorMsg';
 import TableRow from '../components/stylePresets/TableRow';
 import Pager from '../components/Pager';
 import { Content, H1, H2, PlayerImg, Table, TableContainer, TBody, THead } from '../components/stylePresets/presetStyles';
+import PlaceholderCourseTable from '../components/PlaceholderCourseTable';
 
 interface Course {
     course_id: number;
@@ -138,37 +139,7 @@ export default function Courses () {
             <div className="flex flex-col flex-[1_1_auto] overflow-hidden max-w-[39.8%] min-w-[39.8%]">
                 <H2>[Course name]</H2>
                 <TableContainer>
-                    
-                    <table className="mb-[.5rem]">
-                        <tbody>
-                            <tr>
-                                <td className="font-semibold">Date added:</td>
-                                <td>–</td>
-                            </tr>
-                            <tr>
-                                <td className="font-semibold">Total completions:</td>
-                                <td>–</td>
-                            </tr>
-                            <tr>
-                                <td className="font-semibold pb-[1rem]">Players completed:</td>
-                                <td className="pb-[1rem]">–</td>
-                            </tr>
-                            <tr>
-                                <td className="font-semibold">Fastest player:</td>
-                                <td><PlayerImg player_id={undefined} player_name="" className="w-[1.5rem] h-[1.5rem] inline-block mt-[-.125rem]"/> –</td>
-                            </tr>
-                            <tr>
-                                <td className="font-semibold">Fastest time:</td>
-                                <td>00:00:00.000</td>
-                                <td>(– deaths)</td>
-                            </tr>
-                            <tr>
-                                <td className="font-semibold pb-[1rem]">Average first time:</td>
-                                <td className="pb-[1rem]">00:00:00.000</td>
-                                <td className="pb-[1rem]">(– deaths)</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <PlaceholderCourseTable />
                     <Content className="flex-col">
                         <Search id="" />
                         <Table>

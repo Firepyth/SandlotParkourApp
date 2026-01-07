@@ -136,10 +136,9 @@ export default function PlayerCourse () {
         queryFn: (): Promise<PlayerCourse> => fetch(`${import.meta.env.VITE_API_URL}/playercourse/${player_id}/${course_id}`).then(r => r.json())
     });
 
-    if (isPending) return <p>Loading...</p>;
-    if (error) return <p>Error retrieving data.</p>;
+    const isLoaded = !isPending && !error;
 
-    if (data.course_name === undefined) {
+    if (isLoaded && data.course_name === undefined) {
         return <>
             <H1>Error 404</H1>
             <Content>
@@ -151,7 +150,7 @@ export default function PlayerCourse () {
     const graphParams = {
         hoverContent,
         setHoverContent,
-        completions: data.personal_bests
+        completions: isLoaded ? data.personal_bests : [{time: 0, achieved: '', player_id: '', player_name: '', deaths: 0}]
     }
 
     return <>
@@ -159,37 +158,65 @@ export default function PlayerCourse () {
         <Content className="gap-[3.2%]">
             <TableContainer className="w-1/2">
                 <H2>Personal Best Progression</H2>
-                <Graph graphParams={graphParams}/>
+                <Graph graphParams={graphParams} isPending={isPending} error={error}/>
             </TableContainer>
             <div className="flex flex-col flex-[1_1_auto] overflow-hidden max-w-[39.8%] min-w-[39.8%]">
                 <H2>
-                    <Link className="inline cursor-pointer" to={`/players?playerId=${player_id}`}><PlayerImg player_id={data.player_id} player_name={data.player_name} className="inline-block w-[1.5rem] h-[1.5rem]"/>{data.player_name}</Link> on <Link className="inline cursor-pointer" to={`/courses/${course_id}`}>{toTitle(data.course_name)}</Link>
+                    <Link className="inline cursor-pointer" to={`/players?playerId=${player_id}`}><PlayerImg player_id={isLoaded ? data.player_id : undefined} player_name={isLoaded ? data.player_name : ''} className="inline-block w-[1.5rem] h-[1.5rem]"/>{isLoaded ? data.player_name : '[Player name]'}</Link> on <Link className="inline cursor-pointer" to={`/courses/${course_id}`}>{isLoaded ? toTitle(data.course_name) : '[Course name]'}</Link>
                 </H2>
                 <TableContainer>
-                    <table className="mb-[.5rem]">
-                        <tbody>
-                            <tr>
-                                <td className="pb-[1rem] font-bold">Highest rank:</td>
-                                <td className="pb-[1rem]">{data.leaderboard_position}</td>
-                            </tr>
-                            <tr>
-                                <td className="font-bold">Fastest time:</td>
-                                <td>{toTime(data.fastest_time)}</td>
-                                <td>({data.fastest_deaths} deaths)</td>
-                            </tr>
-                            <tr>
-                                <td className="font-bold">Average time:</td>
-                                <td>{toTime(data.avg_time)}</td>
-                                <td>({Number(data.avg_deaths).toFixed(1)} deaths)</td>
-                            </tr>
-                            <tr>
-                                <td className="pb-[1rem] font-bold">First time:</td>
-                                <td className="pb-[1rem]">{toTime(data.first_time)}</td>
-                                <td className="pb-[1rem]">({data.first_deaths} deaths)</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    {player_id && course_id ? <PlayerCourseTable player_id={player_id} course_id={Number(course_id)} total_completions={data.total_completions}/> : ''}
+                    {!isLoaded ? 
+                        <table className="mb-[.5rem]">
+                            <tbody>
+                                <tr>
+                                    <td className="pb-[1rem] font-bold">Highest rank:</td>
+                                    <td className="pb-[1rem]">–</td>
+                                </tr>
+                                <tr>
+                                    <td className="font-bold">Fastest time:</td>
+                                    <td>–</td>
+                                    <td>–</td>
+                                </tr>
+                                <tr>
+                                    <td className="font-bold">Average time:</td>
+                                    <td>–</td>
+                                    <td>–</td>
+                                </tr>
+                                <tr>
+                                    <td className="pb-[1rem] font-bold">First time:</td>
+                                    <td className="pb-[1rem]">–</td>
+                                    <td className="pb-[1rem]">–</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    :
+                        <>
+                            <table className="mb-[.5rem]">
+                                <tbody>
+                                    <tr>
+                                        <td className="pb-[1rem] font-bold">Highest rank:</td>
+                                        <td className="pb-[1rem]">{data.leaderboard_position}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="font-bold">Fastest time:</td>
+                                        <td>{toTime(data.fastest_time)}</td>
+                                        <td>({data.fastest_deaths} deaths)</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="font-bold">Average time:</td>
+                                        <td>{toTime(data.avg_time)}</td>
+                                        <td>({Number(data.avg_deaths).toFixed(1)} deaths)</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="pb-[1rem] font-bold">First time:</td>
+                                        <td className="pb-[1rem]">{toTime(data.first_time)}</td>
+                                        <td className="pb-[1rem]">({data.first_deaths} deaths)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            {player_id && course_id ? <PlayerCourseTable player_id={player_id} course_id={Number(course_id)} total_completions={data.total_completions}/> : ''}
+                        </>
+                    }
                 </TableContainer>
             </div>
         </Content>
