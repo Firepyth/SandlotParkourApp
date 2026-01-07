@@ -9,7 +9,7 @@ import ErrorMsg from '../components/ErrorMsg';
 import TableRow from '../components/stylePresets/TableRow';
 import Pager from '../components/Pager';
 import { Content, H1, H2, Link, PlayerImg, Table, TableContainer, TBody, THead } from '../components/stylePresets/presetStyles';
-import createPath from '../helpers/createPath';
+import Graph from '../components/Graph';
 
 interface PlayerCourse {
     leaderboard_position: number;
@@ -27,6 +27,8 @@ interface PlayerCourse {
         time: number;
         achieved: string;
         deaths: number;
+        player_id: string;
+        player_name: string;
     }[]
 }
 
@@ -38,10 +40,23 @@ interface PlayerCourseTimes {
     time_achieved: string;
 }
 
+interface HoverData {
+    time: number;
+    achieved: string;
+    deaths: number;
+    player_id: string;
+    player_name: string;
+}
+
+interface HoverContent extends HoverData {
+    x: number;
+    y: number;
+}
+
 const PlayerCourseTable = ({ player_id, course_id, total_completions }: { player_id: string, course_id: number, total_completions: number }) => {
     const queryClient = useQueryClient();
 
-    const [sort, setSort] = useState('leaderboard_position');
+    const [sort, setSort] = useState('time');
     const [direction, setDirection] = useState('ASC');
     const [page, setPage] = useState(1);
 
@@ -53,9 +68,6 @@ const PlayerCourseTable = ({ player_id, course_id, total_completions }: { player
     const loadCourses = (data: PlayerCourseTimes[]) => {
         return data.map((playerCourseTime: PlayerCourseTimes) => {
             return <TableRow key={playerCourseTime.time_id}>
-                <TableCell>
-                    {playerCourseTime.leaderboard_position}
-                </TableCell>
                 <TableCell>
                     {toTime(playerCourseTime.time)}
                 </TableCell>
@@ -91,9 +103,6 @@ const PlayerCourseTable = ({ player_id, course_id, total_completions }: { player
         <Table>
             <THead>
                 <TableRow>
-                    <TableHeading sortParams={{...sortParams, newSort: 'leaderboard_position'}}>
-                        Rank
-                    </TableHeading>
                     <TableHeading sortParams={{...sortParams, newSort: 'time'}}>
                         Time
                     </TableHeading>
@@ -120,6 +129,8 @@ const PlayerCourseTable = ({ player_id, course_id, total_completions }: { player
 export default function PlayerCourse () {
     const { player_id, course_id } = useParams();
 
+    const [hoverContent, setHoverContent]: [hoverContent: undefined | HoverContent, setHoverContent: Function] = useState();
+
     const { data, isPending, error } = useQuery({
         queryKey: [`PlayerCourse${player_id}_${course_id}`],
         queryFn: (): Promise<PlayerCourse> => fetch(`${import.meta.env.VITE_API_URL}/playercourse/${player_id}/${course_id}`).then(r => r.json())
@@ -137,18 +148,18 @@ export default function PlayerCourse () {
         </>
     }
 
+    const graphParams = {
+        hoverContent,
+        setHoverContent,
+        completions: data.personal_bests
+    }
+
     return <>
         <H1>Player Stats by Course</H1>
         <Content className="gap-[3.2%]">
             <TableContainer className="w-1/2">
                 <H2>Personal Best Progression</H2>
-                <div className="bg-[#333333] w-full h-full rounded-[.25rem] p-[1rem] flex flex-col flex-[1_1_auto] overflow-hidden">
-                    <svg viewBox='0 0 1000 1000' className="w-full h-full" preserveAspectRatio="slice">
-                        <g stroke="#d41b36" fill="none" strokeWidth=".25rem" strokeLinecap="round" strokeLinejoin="round">
-                            {createPath(data.personal_bests)}
-                        </g>
-                    </svg>
-                </div>
+                <Graph graphParams={graphParams}/>
             </TableContainer>
             <div className="flex flex-col flex-[1_1_auto] overflow-hidden">
                 <H2>

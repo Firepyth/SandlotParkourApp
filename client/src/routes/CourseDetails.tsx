@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { toDate, toTime, toTitle } from '../helpers/convert';
 import { useState } from 'react';
 import TableHeading from '../components/stylePresets/TableHeading';
@@ -10,7 +10,7 @@ import LoadingMsg from '../components/LoadingMsg';
 import ErrorMsg from '../components/ErrorMsg';
 import Pager from '../components/Pager';
 import { Content, H1, PlayerImg, Table, TableContainer, TBody, THead, Link, H2 } from '../components/stylePresets/presetStyles';
-import createPath from '../helpers/createPath';
+import Graph from '../components/Graph';
 
 interface Course {
     course_name: string;
@@ -23,13 +23,20 @@ interface Course {
     avg_first_time: number;
     avg_first_deaths: number;
     fastest_player_name: string;
-    records: {
-        time: number;
-        achieved: string;
-        player_id: string;
-        player_name: string;
-        deaths: number;
-    }[]
+    records: Record[]
+}
+
+interface Record {
+    time: number;
+    achieved: string;
+    player_id: string;
+    player_name: string;
+    deaths: number;
+}
+
+interface HoverContent extends Record {
+    x: number;
+    y: number;
 }
 
 interface CourseTime {
@@ -125,7 +132,7 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
                         Rank
                     </TableHeading>
                     <TableHeading sortParams={{...sortParams, newSort: 'player_name'}}>
-                        Name
+                        Player Name
                     </TableHeading>
                     <TableHeading sortParams={{...sortParams, newSort: 'time'}}>
                         Time
@@ -148,7 +155,10 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
 }
 
 export default function CourseDetails () {
+    const navigate = useNavigate();
     const { id } = useParams();
+
+    const [hoverContent, setHoverContent]: [hoverContent: undefined | HoverContent, setHoverContent: Function] = useState();
 
     const { data, isPending, error } = useQuery({
         queryKey: [`CourseDetails${id}`],
@@ -167,18 +177,20 @@ export default function CourseDetails () {
         </>
     }
 
+    const graphParams = {
+        navigate,
+        id: Number(id),
+        hoverContent,
+        setHoverContent,
+        completions: data.records
+    }
+
     return <>
         <H1>Course Stats</H1>
         <Content className="gap-[3.2%]">
             <TableContainer className="w-11/20">
                 <H2>Record Progression</H2>
-                <div className="bg-[#333333] w-full h-full rounded-[.25rem] p-[1rem] flex flex-col flex-[1_1_auto] overflow-hidden">
-                    <svg viewBox='0 0 1000 1000' className="w-full h-full" preserveAspectRatio="slice">
-                        <g stroke="#d41b36" fill="none" strokeWidth=".25rem" strokeLinecap="round" strokeLinejoin="round">
-                            {createPath(data.records)}
-                        </g>
-                    </svg>
-                </div>
+                <Graph graphParams={graphParams}/>
             </TableContainer>
             <div className="flex flex-col flex-[1_1_auto] overflow-hidden">
                 <H2>{toTitle(data.course_name)}</H2>
@@ -186,43 +198,43 @@ export default function CourseDetails () {
                     <table className="mb-[.5rem]">
                         <tbody>
                             <tr>
-                                <td className="font-bold">Date added:</td>
+                                <td className="font-semibold">Date added:</td>
                                 <td>{toDate(data.course_created)}</td>
                             </tr>
                             <tr>
-                                <td className="font-bold">Total completions:</td>
+                                <td className="font-semibold">Total completions:</td>
                                 <td>{data.total_completions ? data.total_completions : '–'}</td>
                             </tr>
                             <tr>
-                                <td className="font-bold pb-[1rem]">Players completed:</td>
+                                <td className="font-semibold pb-[1rem]">Players completed:</td>
                                 <td className="pb-[1rem]">{data.total_completions ? data.unique_completions : '–'}</td>
                             </tr>
                             <tr>
-                                <td className="font-bold">Fastest player:</td>
+                                <td className="font-semibold">Fastest player:</td>
                                 <td>
                                     {data.total_completions ?
                                         <Link to={`/players/${data.fastest_player_id}/${id}`}>
                                             <PlayerImg 
                                                 player_id={data.fastest_player_id}
                                                 player_name={data.fastest_player_name}
-                                                className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.5rem]"/>
+                                                className="inline-block w-[1.5rem] h-[1.5rem]"/>
                                             {data.fastest_player_name}
                                         </Link>
                                         :
                                         <><PlayerImg 
                                             player_id={undefined}
                                             player_name={''}
-                                            className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.5rem]"/> –</>
+                                            className="inline-block w-[1.5rem] h-[1.5rem]"/> –</>
                                     }
                                 </td>
                             </tr>
                             <tr>
-                                <td className="font-bold">Fastest time:</td>
+                                <td className="font-semibold">Fastest time:</td>
                                 <td>{data.total_completions ? toTime(data.fastest_time) : '00:00:00.000'}</td>
                                 <td>({data.total_completions ? data.fastest_deaths : '–'} deaths)</td>
                             </tr>
                             <tr>
-                                <td className="font-bold pb-[1rem]">Average first time:</td>
+                                <td className="font-semibold pb-[1rem]">Average first time:</td>
                                 <td className="pb-[1rem]">{data.total_completions ? toTime(data.avg_first_time) : '00:00:00.000'}</td>
                                 <td className="pb-[1rem]">({data.total_completions ? Number(data.avg_first_deaths).toFixed(1) : '–'} deaths)</td>
                             </tr>

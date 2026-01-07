@@ -2,7 +2,8 @@ import type { QueryClient } from "@tanstack/react-query";
 import { handleSort } from "../../helpers/handleFilter"
 
 interface TableHeadingProps {
-    children: React.ReactNode, 
+    className?: string;
+    children: React.ReactNode;
     sortParams?: {
         sort: string;
         newSort: string;
@@ -16,8 +17,8 @@ interface TableHeadingProps {
     fakeSort?: boolean;
 }
 
-export default function TableHeading ({children, sortParams = null, fakeSort = false}: TableHeadingProps) {
-    const classes = 'pb-[.5rem] text-left sticky top-0 bg-[#232323] shadow-[0_2px_#404040]';
+export default function TableHeading ({className, children, sortParams = null, fakeSort = false}: TableHeadingProps) {
+    const classes = `pb-[.5rem] font-[600] text-left font-normal sticky top-0 bg-[#232323] shadow-[0_2px_#404040] ${className}`;
     if (fakeSort) {
         return <th className={classes}>
             {children}
@@ -31,6 +32,6 @@ export default function TableHeading ({children, sortParams = null, fakeSort = f
     }
     return <th className={`cursor-pointer ${classes}`} onClick={() => handleSort(sortParams)}>
         {children}
-        <span className="mx-2">{sortParams.sort !== sortParams.newSort ? '-' : sortParams.direction === 'ASC' ? '⏶' : '⏷'}</span>
+        <span className="inline-block min-w-[1.5em] text-center">{sortParams.sort !== sortParams.newSort ? '–' : sortParams.direction === 'ASC' ? <i className="fa-solid fa-caret-up"></i> : <i className="fa-solid fa-caret-down"></i>}</span>
     </th>
 }

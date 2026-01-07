@@ -43,14 +43,14 @@ export default function Players () {
     const loadCourses = (data: Player[]) => {
         if (data.length === 0) {
             return <TableRow>
-                <TableCell colSpan={5}>
+                <TableCell colSpan={5} className="w-[18ch]">
                     No results for: {search}
                 </TableCell>
             </TableRow>
         }
         return data.map((player: Player) => {
             return <TableRow key={player.player_id} route={`/players?playerId=${player.player_id}`} className={`cursor-pointer${queryParams.get('playerId') === player.player_id ? ' bg-[#5a5a5a]' : ''}`}>
-                <TableCell className="min-w-[18 ch]">
+                <TableCell>
                     <PlayerImg player_id={player.player_id} player_name={player.player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
                     {player.player_name}
                 </TableCell>
@@ -104,14 +104,14 @@ export default function Players () {
                 <Table>
                     <THead>
                         <TableRow>
-                            <TableHeading sortParams={{...sortParams, newSort: 'player_name'}}>
+                            <TableHeading sortParams={{...sortParams, newSort: 'player_name'}} className="min-w-[24ch]">
                                 Player name
                             </TableHeading>
                             <TableHeading sortParams={{...sortParams, newSort: 'completed_courses'}}>
                                 Courses completed
                             </TableHeading>
                             <TableHeading sortParams={{...sortParams, newSort: 'avg_position'}}>
-                                Average rank
+                                Avg rank
                             </TableHeading>
                             <TableHeading sortParams={{...sortParams, newSort: 'total_records'}}>
                                 Number of records

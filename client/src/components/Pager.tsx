@@ -19,7 +19,7 @@ export default function Pager ({pagerParams: {page, setPage, fetchTimeout = null
                 fetchTimeout !== null ? clearTimeout(fetchTimeout) : '';
                 queryClient.invalidateQueries({queryKey: [queryKey]});
             }
-        }}>&larr;</button>
+        }}><i className="fa-solid fa-caret-left"></i></button>
         <span className={`inline-block text-center`} style={{minWidth: `${Math.floor(Math.log10(maxItems) + 1) * 3 + 5}ch`}}>{Math.min((page - 1) * 50 + 1, maxItems)}-{Math.min(page * 50, maxItems)} of {maxItems}</span>
         <button className={`cursor-pointer${page * 50 > maxItems ? ' text-[#999999] pointer-events-none': ''}`} onClick={async () => {
             if (page * 50 <= maxItems) {
@@ -27,6 +27,6 @@ export default function Pager ({pagerParams: {page, setPage, fetchTimeout = null
                 fetchTimeout !== null ? clearTimeout(fetchTimeout) : '';
                 queryClient.invalidateQueries({queryKey: [queryKey]});
             }
-        }}>&rarr;</button>
+        }}><i className="fa-solid fa-caret-right"></i></button>
     </div>
 }

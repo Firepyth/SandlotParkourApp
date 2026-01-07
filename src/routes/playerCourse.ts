@@ -102,7 +102,9 @@ router.get('/:player_id/:course_id', async function(req, res, next) {
                         JSON_BUILD_OBJECT (
                             'time', time,
                             'achieved', achieved,
-                            'deaths', deaths
+                            'deaths', deaths,
+                            'player_name', player_name,
+                            'player_id', player_id
                         )
                     ) AS personal_bests
                 FROM (
@@ -110,11 +112,14 @@ router.get('/:player_id/:course_id', async function(req, res, next) {
                         DISTINCT ON (MIN(time) OVER (ORDER BY achieved))
                         MIN(time) OVER (ORDER BY achieved) AS time,
                         deaths,
+                        time."playerId" AS player_id,
+                        name AS player_name,
                         achieved
                     FROM time
+                    JOIN player ON player."playerId" = ${req.params.player_id}
                     WHERE 
                         "courseId" = ${req.params.course_id} AND
-                        "playerId" = ${req.params.player_id}
+                        time."playerId" = ${req.params.player_id}
                     ORDER BY MIN(time) OVER (ORDER BY achieved) DESC, achieved
                 )
             ) e ON 1 = 1

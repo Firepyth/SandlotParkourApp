@@ -155,9 +155,9 @@ export const PlayerDetailsTable = () => {
             <Search searchParams={searchParams} id="player-course-search"/>
             <div className="border-b-[2px] border-[#404040] pb-[.5rem] mb-[.5rem] mt-[-.5rem] flex items-center">
                 <input type="checkbox" id="completed" className="hidden" onChange={() => handleCategoryChange("completed")} checked={category.completed}/>
-                <label htmlFor="completed" className="mr-[1em] uppercase text-[.75rem]">{category.completed ? <i className="fa-regular fa-square-check text-[1rem]"></i> : <i className="fa-regular fa-square text-[1rem]"></i>} Completed</label>
+                <label htmlFor="completed" className="mr-[1em] uppercase font-normal text-[.75rem]">{category.completed ? <i className="fa-regular fa-square-check text-[1rem]"></i> : <i className="fa-regular fa-square text-[1rem]"></i>} Completed</label>
                 <input type="checkbox" id="uncompleted" className="hidden" onChange={() => handleCategoryChange("uncompleted")} checked={category.uncompleted}/>
-                <label htmlFor="uncompleted"  className="mr-[1em] uppercase text-[.75rem]">{category.uncompleted ? <i className="fa-regular fa-square-check text-[1rem]"></i> : <i className="fa-regular fa-square text-[1rem]"></i>} Uncompleted</label>
+                <label htmlFor="uncompleted"  className="mr-[1em] uppercase font-normal text-[.75rem]">{category.uncompleted ? <i className="fa-regular fa-square-check text-[1rem]"></i> : <i className="fa-regular fa-square text-[1rem]"></i>} Uncompleted</label>
             </div>
             <Table>
                 <THead>
