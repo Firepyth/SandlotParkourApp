@@ -18,7 +18,7 @@ interface TableHeadingProps {
 }
 
 export default function TableHeading ({className, children, sortParams = null, fakeSort = false}: TableHeadingProps) {
-    const classes = `pb-[.5rem] font-[600] text-left font-normal sticky top-0 bg-[#232323] shadow-[0_2px_#404040] ${className}`;
+    const classes = `pb-[.5rem] font-[600] text-left font-normal sticky top-0 bg-[#232323] border-b-[2px] border-[#404040] ${className}`;
     if (fakeSort) {
         return <th className={classes}>
             {children}

@@ -149,8 +149,8 @@ export const PlayerDetailsTable = () => {
     }
 
     return <>
-        <PlayerImg player_id={id !== ''  && data?.player_name !== undefined ? id : undefined} player_name={isPending || error ? '' : data.player_name} className="w-[4rem] h-[4rem] mb-[.5rem]"/>
-        <H2>{isPending || error || data.player_name === undefined ? '[Player name]' : data.player_name}</H2>
+        
+        <H2><PlayerImg player_id={id !== ''  && data?.player_name !== undefined ? id : undefined} player_name={isPending || error ? '' : data.player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.375rem]"/>{isPending || error || data.player_name === undefined ? '[Player name]' : data.player_name}</H2>
         <TableContainer>
             <Search searchParams={searchParams} id="player-course-search"/>
             <div className="border-b-[2px] border-[#404040] pb-[.5rem] mb-[.5rem] mt-[-.5rem] flex items-center">

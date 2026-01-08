@@ -120,7 +120,7 @@ const PlayerCourseTable = ({ player_id, course_id, total_completions }: { player
                 }
             </TBody>
         </Table>
-        {isPending ? '' : error ? '' :
+        {isPending || error ? <Pager pagerParams={{page: 1, maxItems: 1}}/> :
             <Pager pagerParams={pagerParams}/>
         }
     </>

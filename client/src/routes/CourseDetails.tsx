@@ -149,7 +149,7 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
                 }
             </TBody>
         </Table>
-        {isPending ? '' : error ? '' :
+        {isPending || error ? <Pager pagerParams={{page: 1, maxItems: 1}}/> :
             <Pager pagerParams={pagerParams}/>
         }
     </>
@@ -218,7 +218,7 @@ export default function CourseDetails () {
                                                 <PlayerImg 
                                                     player_id={data.fastest_player_id}
                                                     player_name={data.fastest_player_name}
-                                                    className="inline-block w-[1.5rem] h-[1.5rem]"/>
+                                                    className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
                                                 {data.fastest_player_name}
                                             </Link>
                                             :

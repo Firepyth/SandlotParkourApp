@@ -14,7 +14,7 @@ export const TableContainer = ({children, className = '', onClick = undefined}: 
 
 export const Table = ({children, className = '', strictHeight = false}: {children: React.ReactNode, className?: string, strictHeight?: boolean}) => {
     return <div className={`overflow-y-auto ${strictHeight ? '' : 'h-full'} flex-[1_1_auto] border-b-[2px] border-[#404040] ${className}`}>
-        <table className="w-full">{children}</table>
+        <table className="border-separate w-full border-spacing-0">{children}</table>
     </div>
 }
 
