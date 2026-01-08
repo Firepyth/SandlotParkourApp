@@ -1,7 +1,7 @@
 import { Link as ReactLink } from "react-router";
 
 export const H1 = ({children, className = ''}: {children: React.ReactNode, className?: string}) => {
-    return <h1 className={`border-b-[2px] border-[#404040] m-[3.75rem_0_2rem_0] text-[2rem] pb-[.375em] ${className}`}>{children}</h1>
+    return <h1 className={`border-b-[2px] border-[#404040] m-[3.75rem_0_2rem_0] text-[2rem]/[2rem] pb-[.375em] ${className}`}>{children}</h1>
 }
 
 export const H2 = ({children, className = ''}: {children: React.ReactNode, className?: string}) => {
@@ -13,7 +13,7 @@ export const TableContainer = ({children, className = '', onClick = undefined}: 
 }
 
 export const Table = ({children, className = '', strictHeight = false}: {children: React.ReactNode, className?: string, strictHeight?: boolean}) => {
-    return <div className={`overflow-y-auto ${strictHeight ? '' : 'h-full'} flex-[1_1_auto] border-b-[2px] border-[#404040] ${className}`}>
+    return <div className={`overflow-y-auto ${strictHeight ? '' : 'h-full'} flex-[1_1_auto] border-b-[2px] border-[#404040] max-h-[40vh] lg:max-h-none ${className}`}>
         <table className="border-separate w-full border-spacing-0">{children}</table>
     </div>
 }
