@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node ./build/bin/www.js",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm install && npx prisma generate && tsc && cd client && npm install && npm run build",
     "dev": "tsc && concurrently \"npm start\" \"cd client && npm run dev\" --kill-others"
   },
   "keywords": [],
