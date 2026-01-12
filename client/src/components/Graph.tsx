@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type JSX } from "react";
+import { useEffect, useRef, useState, type JSX, memo, useMemo } from "react";
 import { toDate, toTime } from "../helpers/convert";
 import type { NavigateFunction } from "react-router";
 import { H2, PlayerImg } from "./stylePresets/presetStyles";
@@ -28,7 +28,16 @@ interface GraphParams {
     error: Error | null;
 }
 
-const createPath = (completions: Completion[], width: number, height: number, setHoverContent: Function | undefined = undefined, navigate: NavigateFunction | undefined = undefined, course_id: number = 0) => {
+interface CreatePathParams {
+    completions: Completion[];
+    width: number;
+    height: number;
+    setHoverContent: Function | undefined;
+    navigate: NavigateFunction | undefined;
+    course_id: number;
+}
+
+const CreatePath = memo(({params: {completions, width, height, setHoverContent = undefined, navigate = undefined, course_id = 0}}: {params: CreatePathParams}) => {
     let path: string;
     let lines: JSX.Element[] = [];
     let text: JSX.Element[] = [];
@@ -39,10 +48,15 @@ const createPath = (completions: Completion[], width: number, height: number, se
         const maxTime = completions[0].time;
         const minTime = completions[completions.length - 1].time;
 
-        const firstDate = Date.parse(completions[0].achieved);
-        const lastDate= Date.parse(completions[completions.length - 1].achieved);
+        const minDate = Date.parse(completions[0].achieved);
+        const maxDate= Date.parse(completions[completions.length - 1].achieved);
 
         const day = 1000*60*60*24;
+
+        const startX = 150
+        const endX = 50;
+        const startY = 20;
+        const endY = 50;
 
         if (completions.length > 1) {
             const timeIncrements = [
@@ -80,57 +94,49 @@ const createPath = (completions: Completion[], width: number, height: number, se
                     break;
                 }
             }
+            
+            let dateIncrement = day;
 
-            const dateIncrements = [
-                1 * day,
-                2 * day,
-                3 * day,
-                4 * day,
-                7 * day,
-                14 * day,
-                30 * day,
-                60 * day,
-                120 * day,
-                180 * day,
-                365 * day
-            ];
-
-            let dateIncrement;
-
-            for (let i = 0; i < dateIncrements.length; i++) {
-                if ((lastDate - firstDate) / dateIncrements[i] < 8) {
-                    dateIncrement = dateIncrements[i];
-                    break;
-                }
+            while ((maxDate - minDate) / dateIncrement > (width - startX) / 200) {
+                dateIncrement *= 2;
             }
 
-            if (dateIncrement === undefined) dateIncrement = 365 * day;
             if (timeIncrement === undefined) timeIncrement = 480000;
 
             const startTime = Math.floor(minTime / timeIncrement) * timeIncrement;
-            const endTime = Math.ceil(maxTime / timeIncrement) * timeIncrement + 1;
+            const endTime = Math.ceil(maxTime / timeIncrement) * timeIncrement;
 
-            let currentTime = Math.floor(startTime / timeIncrement) * timeIncrement;
-            while (currentTime < endTime) {
-                const y = (endTime - currentTime) / (endTime - startTime) * (height - 150) + 50;
-                lines.push(<line stroke="#404040" x1={0} x2={1000} y1={y} y2={y} z={-2}/>);
-                text.push(<text x={0} y={y - 10} fill="#999999" stroke="none" className="font-rubik">{toTime(currentTime)}</text>);
+            let currentIndex = 0;
+            let currentTime = startTime;
+            let endIndex = Math.ceil(endTime / timeIncrement) - Math.floor(startTime / timeIncrement);
+            while (currentIndex <= endIndex) {
+                const y = ((currentIndex - endIndex) / -endIndex) * (height - endY - startY) + startY;
+                lines.push(<line stroke="#404040" x1={startX - 20} x2={width - endX + 20} y1={y} y2={y} z={-2}/>);
+                text.push(<text x={startX - 130} y={y + 5} fill="#999999" stroke="none" className="font-rubik">{toTime(currentTime)}</text>);
                 currentTime += timeIncrement;
+                currentIndex++;
             }
 
-            let currentDate = Math.floor(firstDate / dateIncrement) * dateIncrement;
-            while (currentDate < Math.ceil(lastDate / dateIncrement) * dateIncrement + 1) {
-                const x = (currentDate - firstDate) / (lastDate - firstDate) * (width - 200) + 150;
-                lines.push(<line stroke="#404040" x1={x} x2={x} y1={0} y2={height - 50}/>);
-                text.push(<text x={x - 50} y={height - 25} fill="#999999" stroke="none" className="font-rubik">{toDate(new Date(currentDate).toISOString())}</text>);
+            const startDate = dateIncrement === day ? minDate : Math.floor(minDate / day) * day;
+            const endDate = dateIncrement === day ? maxDate : Math.ceil((maxDate - startDate) / dateIncrement) * dateIncrement + startDate;
+
+            currentIndex = 0;
+            let currentDate = startDate;
+            endIndex = Math.floor(endDate / dateIncrement) - Math.floor(startDate / dateIncrement) || 1;
+            while (currentIndex <= endIndex) {
+                const x = (currentIndex / endIndex) * (width - endX - startX) + startX;
+                lines.push(<line stroke="#404040" x1={x} x2={x} y1={0} y2={height - endY + 20}/>);
+                text.push(<text x={x - 50} y={height - endY + 45} fill="#999999" stroke="none" className="font-rubik">{toDate(new Date(currentDate).toISOString())}</text>);
+                if (endIndex === 1) break;
                 currentDate += dateIncrement;
+                currentIndex++;
             }
 
-            let lastY = Math.abs(completions[0].time - endTime) / (endTime - startTime) * (height - 150) + 50;
-            path = `M150 ${lastY} `;
+            let lastY = (endTime - completions[0].time) / (endTime - startTime) * (height - endY - startY) + startY;
+            path = `M${(Date.parse(completions[0].achieved) - startDate) / (endDate - startDate) * (width - endX - startX) + startX} ${lastY} `;
             completions.forEach((item) => {
-                const x = (Date.parse(item.achieved) - firstDate) / (lastDate - firstDate) * (width - 200) + 150;
-                const y = Math.abs(item.time - endTime) / (endTime - startTime) * (height - 150) + 50;
+                const x = (Date.parse(item.achieved) - startDate) / (endDate - startDate) * (width - endX - startX) + startX;
+                const y = (endTime - item.time) / (endTime - startTime) * (height - endY - startY) + startY;
                 
                 if (item.player_id !== undefined && setHoverContent !== undefined) images.push(
                     <image x={x + 6} y={y - 30} width={25} height={25} href={`https://mc-heads.net/avatar/${item.player_id}`} className={navigate !== undefined ? 'cursor-pointer' : ''}
@@ -143,23 +149,32 @@ const createPath = (completions: Completion[], width: number, height: number, se
                 path += `L${x} ${y}`;
             });
         } else {
+            let startTime = Math.floor(minTime / 1000) * 1000 - 4000;
+            let endTime = startTime + 8000;
             let currentTime = Math.ceil(minTime / 1000) * 1000 - 4 * 1000;
-            for (let i = 0; i < 8; i++) {
-                const y = Math.abs(currentTime - (maxTime + 4 * 1000)) / (8 * 1000) * (height - 150) + 50;
-                lines.push(<line stroke="#404040" x1={0} x2={width} y1={y} y2={y}/>);
-                text.push(<text x={0} y={y - 10} fill="#999999" stroke="none" className="font-rubik">{toTime(currentTime)}</text>);
+            for (let i = 0; i <= 7; i++) {
+                const y = ((i - 7) / -7) * (height - endY - startY) + startY;
+                lines.push(<line stroke="#404040" x1={startX - 20} x2={width - endX + 20} y1={y} y2={y}/>);
+                text.push(<text x={startX - 130} y={y + 5} fill="#999999" stroke="none" className="font-rubik">{toTime(currentTime)}</text>);
                 currentTime += 1000;
             }
 
-            let currentDate = Math.floor(firstDate / day) * day;
-            for (let i = 0; i < 7; i++) {
-                const x = i / 6 * (width - 200) + 150;
-                lines.push(<line stroke="#404040" x1={x} x2={x} y1={0} y2={height - 50}/>);
-                text.push(<text x={x - 50} y={height - 25} fill="#999999" stroke="none" className="font-rubik">{toDate(new Date(currentDate).toISOString())}</text>);
+            let currentDate = minDate;
+            for (let i = 0; i <= Math.floor((width - endX - startX) / 100); i++) {
+                const x = (i / Math.floor((width - endX - startX) / 100)) * (width - endX - startX) + startX;
+                lines.push(<line stroke="#404040" x1={x} x2={x} y1={0} y2={height - endY + 20}/>);
+                text.push(<text x={x - 50} y={height - endY + 45} fill="#999999" stroke="none" className="font-rubik">{toDate(new Date(currentDate).toISOString())}</text>);
                 currentDate += day;
             }
-
-            path = `M150 ${(height - 150) / 2 + 50} L${width - 50} ${(height - 150) / 2 + 50}`;
+            
+            const y = (endTime - minTime) / (7000) * (height - endY - startY) + startY;
+            path = `M${startX} ${y} L${width - 50} ${y}`;
+            circles.push(<circle r="3px" cx={startX} cy={y} fill="#d41b36"/>);
+            if (completions[0].player_id !== undefined && setHoverContent !== undefined) images.push(
+                <image x={startX + 6} y={y - 30} width={25} height={25} href={`https://mc-heads.net/avatar/${completions[0].player_id}`} className={navigate !== undefined ? 'cursor-pointer' : ''}
+                onMouseMove={(e) => setHoverContent({...completions[0], x: e.pageX, y: e.pageY})} onMouseLeave={() => setHoverContent(undefined)}
+                onClick={() => navigate !== undefined && course_id !== 0 ? navigate(`/players/${completions[0].player_id}/${course_id}`) : undefined}/>
+            );
         }
     } else {
         text.push(<text x={width / 2 - 159.5} y={height / 2 - 19.5} fill="#999999" stroke="none" fontSize={32} className="font-rubik">No completions found</text>)
@@ -173,7 +188,7 @@ const createPath = (completions: Completion[], width: number, height: number, se
         {...images}
         {path !== '' ? <path d={path}/> : ''}
     </>
-}
+});
 
 export default function Graph ({graphParams: {hoverContent, completions, setHoverContent, navigate, id}, isPending, error}: GraphParams) {
     const ref = useRef<HTMLInputElement | null>(null);
@@ -186,7 +201,7 @@ export default function Graph ({graphParams: {hoverContent, completions, setHove
         const resizeObserver = new ResizeObserver((entries) => {
             for (const entry of entries) {
                 const { width, height } = entry.contentRect;
-                setDimensions({ width: Math.floor(width), height: Math.floor(height) });
+                setDimensions({ width: width, height: height });
                 
             }
         });
@@ -198,8 +213,25 @@ export default function Graph ({graphParams: {hoverContent, completions, setHove
         };
     }, []);
 
+    const scale = Math.max(dimensions ? 420 / dimensions.width : 1.5, 1.5);
+
+    const createPathParams = useMemo(() => {
+        return {
+            completions,
+            width: dimensions !== undefined ? dimensions.width * scale : 0,
+            height: dimensions !== undefined ? dimensions.height * scale : 0,
+            setHoverContent,
+            navigate,
+            course_id: id !== undefined ? Number(id) : 0
+        }
+    }, [dimensions, completions]);
+
     return <>
-        {hoverContent !== undefined ? <div className="absolute bg-[#232323] p-[1rem] border-[1px] border-[#404040] rounded-[.5rem]" style={{bottom: `${window.innerHeight - hoverContent.y + 2}px`, right: `${window.innerWidth - hoverContent.x + 5}px`}}>
+        {hoverContent !== undefined ? 
+        <div className="absolute bg-[#232323] p-[1rem] border-[1px] border-[#404040] rounded-[.5rem]" 
+             style={{bottom: `${window.innerHeight - hoverContent.y + 2}px`,
+                right: window.innerWidth / 2 < hoverContent.x ? `${window.innerWidth - hoverContent.x + 5}px` : 'auto',
+                left: window.innerWidth / 2 >= hoverContent.x ? `${hoverContent.x + 5}px` : 'auto'}}>
             <H2 className="mb-[0] leading-[2.5rem]">
                 <PlayerImg player_id={hoverContent.player_id} player_name={hoverContent.player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.375rem]"></PlayerImg>
                 {hoverContent.player_name}
@@ -207,11 +239,11 @@ export default function Graph ({graphParams: {hoverContent, completions, setHove
             <p>{toTime(hoverContent.time)} ({hoverContent.deaths} deaths)</p>
             <p>{toDate(hoverContent.achieved)}</p>
         </div> : ''}
-        <div ref={ref} className="bg-[#333333] w-full h-full rounded-[.25rem] p-[1rem] flex flex-col flex-[1_1_auto] overflow-hidden">
+        <div ref={ref} className="bg-[#333333] w-full h-full rounded-[.25rem] p-[1rem] flex flex-col flex-[1_1_auto] overflow-hidden max-h-[calc(40vh_+_10rem)] min-h-[calc(40vh_+_10rem)] xl:max-h-none xl:min-h-auto">
             {isPending ? <p>Loading...</p> : error ? <p>Error loading data.</p> :
-                <svg viewBox={`0 0 ${dimensions !== undefined ? dimensions.width * 1.5 : 0} ${dimensions !== undefined ? dimensions.height * 1.5: 0}`}>
+                <svg viewBox={`0 0 ${dimensions !== undefined ? dimensions.width * scale : 0} ${dimensions !== undefined ? dimensions.height * scale: 0}`}>
                     <g stroke="#d41b36" fill="none" strokeWidth=".25rem" strokeLinecap="round" strokeLinejoin="round">
-                        {dimensions !== undefined ? createPath(completions, dimensions.width * 1.5, dimensions.height * 1.5, setHoverContent, navigate, id !== undefined ? Number(id) : 0) : ''}
+                        {dimensions !== undefined && createPathParams.completions[0].time !== 0 ? <CreatePath params={createPathParams} /> : ''}
                     </g>
                 </svg>
             }
