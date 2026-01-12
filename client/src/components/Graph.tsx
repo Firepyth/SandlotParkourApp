@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type JSX, memo, useMemo } from "react";
 import { toDate, toTime } from "../helpers/convert";
 import type { NavigateFunction } from "react-router";
-import { H2, PlayerImg } from "./stylePresets/presetStyles";
+import HoverGraph from "./HoverGraph";
 
 interface Completion {
     time: number;
@@ -14,6 +14,7 @@ interface Completion {
 interface HoverContent extends Completion {
     x: number;
     y: number;
+    route?: string;
 }
 
 interface GraphParams {
@@ -35,6 +36,24 @@ interface CreatePathParams {
     setHoverContent: Function | undefined;
     navigate: NavigateFunction | undefined;
     course_id: number;
+}
+
+const handleInteract = async (e: React.PointerEvent<SVGRectElement>, navigate: NavigateFunction | undefined, hoverContentParams: HoverContent, course_id: number, setHoverContent: Function) => {
+    if (e.pointerType === 'touch') {
+        await setHoverContent(undefined);
+        await setHoverContent({...hoverContentParams, route: navigate ? `/players/${hoverContentParams.player_id}/${course_id}` : undefined});
+    } else {
+        navigate !== undefined && course_id !== 0 ? navigate(`/players/${hoverContentParams.player_id}/${course_id}`) : undefined;
+    }
+    e.stopPropagation();
+}
+
+const handleMove = (e: React.PointerEvent<SVGRectElement>, hoverContentParams: HoverContent, setHoverContent: Function) => {
+    if (e.pointerType !== 'touch') setHoverContent(hoverContentParams);
+}
+
+const handleLeave = (e: React.PointerEvent<SVGRectElement>, setHoverContent: Function) => {
+    if (e.pointerType !== 'touch') setHoverContent(undefined);
 }
 
 const CreatePath = memo(({params: {completions, width, height, setHoverContent = undefined, navigate = undefined, course_id = 0}}: {params: CreatePathParams}) => {
@@ -96,9 +115,9 @@ const CreatePath = memo(({params: {completions, width, height, setHoverContent =
             }
             
             let dateIncrement = day;
-
-            while ((maxDate - minDate) / dateIncrement > (width - startX) / 200) {
-                dateIncrement *= 2;
+            
+            while ((maxDate - minDate) / dateIncrement > (width - endX - startX) / 150) {
+                dateIncrement = Math.ceil(dateIncrement * 1.1);
             }
 
             if (timeIncrement === undefined) timeIncrement = 480000;
@@ -139,9 +158,14 @@ const CreatePath = memo(({params: {completions, width, height, setHoverContent =
                 const y = (endTime - item.time) / (endTime - startTime) * (height - endY - startY) + startY;
                 
                 if (item.player_id !== undefined && setHoverContent !== undefined) images.push(
-                    <image x={x + 6} y={y - 30} width={25} height={25} href={`https://mc-heads.net/avatar/${item.player_id}`} className={navigate !== undefined ? 'cursor-pointer' : ''}
-                    onMouseMove={(e) => setHoverContent({...item, x: e.pageX, y: e.pageY})} onMouseLeave={() => setHoverContent(undefined)}
-                    onClick={() => navigate !== undefined && course_id !== 0 ? navigate(`/players/${item.player_id}/${course_id}`) : undefined}/>
+                    <>
+                        <image x={x + 6} y={y - 30} width={25} height={25} href={`https://mc-heads.net/avatar/${item.player_id}`}/>
+                        <rect x={x + 6} y={y - 30} width={25} height={25}
+                            onPointerMove={(e) => handleMove(e, {...item, x: e.pageX, y: e.pageY}, setHoverContent)} onPointerLeave={(e) => handleLeave(e, setHoverContent)}
+                            onPointerDown={(e) => handleInteract(e, navigate, {...item, x: e.pageX, y: e.pageY}, course_id, setHoverContent)}
+                            stroke="#00000000" strokeWidth={20} fill="#00000000"
+                            className={navigate !== undefined ? 'cursor-pointer' : ''}/>
+                    </>
                 );
                 circles.push(<circle r="3px" cx={x} cy={y} fill="#d41b36"/>);
                 path += `L${x} ${lastY}`;
@@ -171,9 +195,13 @@ const CreatePath = memo(({params: {completions, width, height, setHoverContent =
             path = `M${startX} ${y} L${width - 50} ${y}`;
             circles.push(<circle r="3px" cx={startX} cy={y} fill="#d41b36"/>);
             if (completions[0].player_id !== undefined && setHoverContent !== undefined) images.push(
-                <image x={startX + 6} y={y - 30} width={25} height={25} href={`https://mc-heads.net/avatar/${completions[0].player_id}`} className={navigate !== undefined ? 'cursor-pointer' : ''}
-                onMouseMove={(e) => setHoverContent({...completions[0], x: e.pageX, y: e.pageY})} onMouseLeave={() => setHoverContent(undefined)}
-                onClick={() => navigate !== undefined && course_id !== 0 ? navigate(`/players/${completions[0].player_id}/${course_id}`) : undefined}/>
+                <>
+                    <image x={startX + 6} y={y - 30} width={25} height={25} href={`https://mc-heads.net/avatar/${completions[0].player_id}`}/>
+                    <rect x={startX + 6} y={y - 30} height={25} width={25} className={navigate !== undefined ? 'cursor-pointer' : ''}
+                        onPointerMove={(e) => handleMove(e, {...completions[0], x: e.pageX, y: e.pageY}, setHoverContent)} onPointerLeave={(e) => handleLeave(e, setHoverContent)}
+                        onPointerDown={(e) => handleInteract(e, navigate, {...completions[0], x: e.pageX, y: e.pageY}, course_id, setHoverContent)}
+                        stroke="#00000000" strokeWidth={20} fill="#00000000"/>
+                </>
             );
         }
     } else {
@@ -185,8 +213,8 @@ const CreatePath = memo(({params: {completions, width, height, setHoverContent =
         {...lines}
         {...text}
         {...circles}
-        {...images}
         {path !== '' ? <path d={path}/> : ''}
+        {...images}
     </>
 });
 
@@ -227,19 +255,9 @@ export default function Graph ({graphParams: {hoverContent, completions, setHove
     }, [dimensions, completions]);
 
     return <>
-        {hoverContent !== undefined ? 
-        <div className="absolute bg-[#232323] p-[1rem] border-[1px] border-[#404040] rounded-[.5rem]" 
-             style={{bottom: `${window.innerHeight - hoverContent.y + 2}px`,
-                right: window.innerWidth / 2 < hoverContent.x ? `${window.innerWidth - hoverContent.x + 5}px` : 'auto',
-                left: window.innerWidth / 2 >= hoverContent.x ? `${hoverContent.x + 5}px` : 'auto'}}>
-            <H2 className="mb-[0] leading-[2.5rem]">
-                <PlayerImg player_id={hoverContent.player_id} player_name={hoverContent.player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.375rem]"></PlayerImg>
-                {hoverContent.player_name}
-            </H2>
-            <p>{toTime(hoverContent.time)} ({hoverContent.deaths} deaths)</p>
-            <p>{toDate(hoverContent.achieved)}</p>
-        </div> : ''}
-        <div ref={ref} className="bg-[#333333] w-full h-full rounded-[.25rem] p-[1rem] flex flex-col flex-[1_1_auto] overflow-hidden max-h-[calc(40vh_+_10rem)] min-h-[calc(40vh_+_10rem)] xl:max-h-none xl:min-h-auto">
+        {hoverContent !== undefined ? <HoverGraph hoverContent={hoverContent}/> : ''}
+        <div ref={ref} className="bg-[#333333] w-full h-full rounded-[.25rem] p-[1rem] flex flex-col flex-[1_1_auto] overflow-hidden max-h-[calc(40vh_+_10rem)] min-h-[calc(40vh_+_10rem)] xl:max-h-none xl:min-h-auto"
+             onPointerDown={() => setHoverContent(undefined)}>
             {isPending ? <p>Loading...</p> : error ? <p>Error loading data.</p> :
                 <svg viewBox={`0 0 ${dimensions !== undefined ? dimensions.width * scale : 0} ${dimensions !== undefined ? dimensions.height * scale: 0}`}>
                     <g stroke="#d41b36" fill="none" strokeWidth=".25rem" strokeLinecap="round" strokeLinejoin="round">
