@@ -92,10 +92,13 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
         return rows;
     }
 
-    return <TableContainer className="absolute left-0 right-0 w-[28rem] top-20 mx-auto z-1 shadow-[0_0_0_max(100vh,_100vw)_rgba(0,_0,_0,_.5)]" onClick={(e: Event) => e.stopPropagation()}>
-        <Search searchParams={searchParams} autofocus={true} id="global-search"/>
-        <div className="flex gap-[1rem]">
-            <Table className="w-full h-[8.9375rem]" strictHeight={true}>
+    return <TableContainer className="absolute left-0 right-0 w-[calc(100vw_-_2rem)] max-w-[20rem] top-20 mx-auto z-1 shadow-[0_0_0_max(100vh,_100vw)_rgba(0,_0,_0,_.5)] sm:w-[28rem] sm:max-w-[28rem]" onClick={(e: Event) => e.stopPropagation()}>
+        <div className="flex gap-[1rem] mb-[1.5rem]">
+            <Search searchParams={searchParams} autofocus={true} id="global-search" className="w-full mb-0!"/>
+            <button className="my-auto cursor-pointer bg-[#8b8b8b] text-[#232323] rounded-full min-w-[1.75rem] min-h-[1.75rem] hover:bg-[#999999] flex items-center justify-center" onClick={() => setShowSearch(false)}><i className="fa-solid fa-x"></i></button>
+        </div>
+        <div className="flex flex-col gap-[2rem] sm:flex-row sm:gap-[1rem]">
+            <Table className="w-full h-[8.9375rem] max-h-none! min-h-auto!" strictHeight={true}>
                 <THead>
                     <TableRow>
                         <TableHeading>
@@ -107,7 +110,7 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
                     {isPending ? <LoadingMsg /> : error ? <ErrorMsg /> : loadPlayers(data)}
                 </TBody>
             </Table>
-            <Table className="w-full h-[8.9375rem]" strictHeight={true}>
+            <Table className="w-full h-[8.9375rem] max-h-none! min-h-auto!" strictHeight={true}>
                 <THead>
                     <TableRow>
                         <TableHeading>
