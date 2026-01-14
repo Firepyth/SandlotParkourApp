@@ -10,6 +10,8 @@ import ErrorMsg from './ErrorMsg';
 import TableRow from './stylePresets/TableRow';
 import Pager from './Pager';
 import { H2, PlayerImg, Table, TableContainer, TBody, THead } from './stylePresets/presetStyles';
+import SortButton from './SortButton';
+import SortModal from './SortModal';
 
 interface PlayerTime {
     course_name: string;
@@ -26,7 +28,7 @@ interface PlayerTimes {
     completions: PlayerTime[];
 }
 
-export const PlayerDetailsTable = () => {
+export const PlayerDetailsTable = ({isMobile, showModal, setShowModal, ref}: {isMobile: boolean, showModal: string | false, setShowModal: Function, ref: React.RefObject<HTMLHeadingElement | null>}) => {
     const [queryParams] = useSearchParams();
     const queryClient = useQueryClient();
 
@@ -88,31 +90,31 @@ export const PlayerDetailsTable = () => {
             if (playerTime.course_name === null) return;
             if (playerTime.fastest_time === null) {
                 return <TableRow key={playerTime.course_id}>
-                    <TableCell>
-                        –
-                    </TableCell>
-                    <TableCell>
+                    <TableCell colName="Course name" className={isMobile ? 'bg-[#333333]' : ''}>
                         {toTitle(playerTime.course_name)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell colName="Rank">
                         –
                     </TableCell>
-                    <TableCell>
+                    <TableCell colName="Time">
+                        –
+                    </TableCell>
+                    <TableCell colName="Deaths">
                         –
                     </TableCell>
                 </TableRow>
             }
             return <TableRow key={playerTime.course_id} route={`/players/${id}/${playerTime.course_id}`} className="cursor-pointer">
-                <TableCell>
-                    {playerTime.leaderboard_position}
-                </TableCell>
-                <TableCell>
+                <TableCell colName="Course name" className={isMobile ? 'bg-[#333333]' : ''}>
                     {toTitle(playerTime.course_name)}
                 </TableCell>
-                <TableCell>
+                <TableCell colName="Rank">
+                    {playerTime.leaderboard_position}
+                </TableCell>
+                <TableCell colName="Time">
                     {toTime(playerTime.fastest_time)}
                 </TableCell>
-                <TableCell>
+                <TableCell colName="Deaths">
                     {playerTime.deaths}
                 </TableCell>
             </TableRow>
@@ -149,10 +151,26 @@ export const PlayerDetailsTable = () => {
     }
 
     return <>
-        
-        <H2><PlayerImg player_id={id !== ''  && data?.player_name !== undefined ? id : undefined} player_name={isPending || error ? '' : data.player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.375rem]"/>{isPending || error || data.player_name === undefined ? '[Player name]' : data.player_name}</H2>
+        {showModal === 'playerDetailFilter' ?
+        <SortModal setShowModal={setShowModal}
+                        sortParams={sortParams}
+                        sortOptions={[
+                        {name: 'Course name', sort: 'course_name'},
+                        {name: 'Rank', sort: 'leaderboard_position'},
+                        {name: 'Time', sort: 'fastest_time'},
+                        {name: 'Deaths', sort: 'deaths'}
+                    ]}
+                    name="playerDetailFilter"/>
+        : ''}
+        <H2 ref={ref}><PlayerImg player_id={id !== ''  && data?.player_name !== undefined ? id : undefined} player_name={isPending || error ? '' : data.player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.375rem]"/>{isPending || error || data.player_name === undefined ? '[Player name]' : data.player_name}</H2>
         <TableContainer>
-            <Search searchParams={searchParams} id="player-course-search"/>
+            {isMobile ?
+            <div className="flex gap-[1rem] mb-[1.5rem]">
+                <Search searchParams={id !== '' ? searchParams : undefined} id={id !== '' ? 'player-course-search' : ''} className="mb-0!"/>
+                <SortButton setShowModal={id !== '' ? () => setShowModal('playerDetailFilter') : undefined} />
+            </div>
+            : 
+            <Search searchParams={id !== '' ? searchParams : undefined} id={id !== '' ? 'player-course-search' : ''}/>}
             <div className="border-b-[2px] border-[#404040] pb-[.5rem] mb-[.5rem] mt-[-.5rem] flex items-center">
                 <input type="checkbox" id="completed" className="hidden" onChange={() => handleCategoryChange("completed")} checked={category.completed}/>
                 <label htmlFor="completed" className="mr-[1em] uppercase font-normal text-[.75rem]">{category.completed ? <i className="fa-regular fa-square-check text-[1rem]"></i> : <i className="fa-regular fa-square text-[1rem]"></i>} Completed</label>
@@ -162,11 +180,11 @@ export const PlayerDetailsTable = () => {
             <Table>
                 <THead>
                     <TableRow>
-                        <TableHeading sortParams={{...sortParams, newSort: 'leaderboard_position'}}>
-                            Rank
-                        </TableHeading>
                         <TableHeading sortParams={{...sortParams, newSort: 'course_name'}}>
                             Course name
+                        </TableHeading>
+                        <TableHeading sortParams={{...sortParams, newSort: 'leaderboard_position'}}>
+                            Rank
                         </TableHeading>
                         <TableHeading sortParams={{...sortParams, newSort: 'fastest_time'}}>
                             Time

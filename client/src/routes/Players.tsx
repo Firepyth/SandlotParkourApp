@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
-import { useLocation, useSearchParams } from "react-router";
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useOutletContext, useSearchParams } from "react-router";
 import TableHeading from '../components/stylePresets/TableHeading';
 import TableCell from '../components/stylePresets/TableCell';
 import Search from '../components/Search';
@@ -10,6 +10,9 @@ import TableRow from '../components/stylePresets/TableRow';
 import Pager from '../components/Pager';
 import { PlayerDetailsTable } from '../components/PlayerDetailsTable';
 import { Content, H1, PlayerImg, Table, TableContainer, TBody, THead } from '../components/stylePresets/presetStyles';
+import SortButton from '../components/SortButton';
+import { useIsMobile } from '../helpers/hooks';
+import SortModal from '../components/SortModal';
 
 interface Player {
     player_id: string;
@@ -25,20 +28,30 @@ interface Players {
 }
 
 export default function Players () {
+    const isMobile = useIsMobile();
     const [queryParams] = useSearchParams();
     const queryClient = useQueryClient();
     const showTop = useLocation().state?.showTop;
+    const ref = useRef<HTMLHeadingElement | null>(null);
+    const scrollDown = useLocation().state?.scrollDown;
+    const scrollUp = useLocation().state?.scrollUp;
 
     const [sort, setSort] = useState(showTop === true ? 'completed_courses' : 'player_name');
     const [search, setSearch] = useState('');
     const [direction, setDirection] = useState(showTop === true ? 'DESC' : 'ASC');
     const [page, setPage] = useState(1);
     const [fetchTimeout, setFetchTimeout] = useState(0);
+    const {showModal, setShowModal} = useOutletContext<{showModal: string | false, setShowModal: Function}>();
 
     const { data, isPending, error } = useQuery({
         queryKey: ['Players'],
         queryFn: (): Promise<Players> => fetch(`${import.meta.env.VITE_API_URL}/players?sort=${sort}&search=${search}&direction=${direction}&page=${page}`).then(r => r.json())
     });
+
+    useEffect(() => {
+        scrollDown ? ref.current?.scrollIntoView() : '';
+        scrollUp ? window.scrollTo(0, 0) : '';
+    }, [scrollDown, scrollUp]);
 
     const loadCourses = (data: Player[]) => {
         if (data.length === 0) {
@@ -49,18 +62,20 @@ export default function Players () {
             </TableRow>
         }
         return data.map((player: Player) => {
-            return <TableRow key={player.player_id} route={`/players?playerId=${player.player_id}`} className={`cursor-pointer${queryParams.get('playerId') === player.player_id ? ' bg-[#5a5a5a]' : ''}`}>
-                <TableCell>
-                    <PlayerImg player_id={player.player_id} player_name={player.player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
-                    {player.player_name}
+            return <TableRow key={player.player_id} route={`/players?playerId=${player.player_id}`} className={`cursor-pointer${queryParams.get('playerId') === player.player_id ? (isMobile ? ' bg-[#2a2a2a]' : ' bg-[#5a5a5a]') : ''}`} scrollTo={ref}>
+                <TableCell colName="Player name" className={isMobile ? 'bg-[#333333]' : ''}>
+                    <div>
+                        <PlayerImg player_id={player.player_id} player_name={player.player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
+                        {player.player_name}
+                    </div>
                 </TableCell>
-                <TableCell>
+                <TableCell colName="Courses completed">
                     {player.completed_courses}
                 </TableCell>
-                <TableCell>
+                <TableCell colName="Avg rank">
                     {Number(player.avg_position).toFixed(1)}
                 </TableCell>
-                <TableCell>
+                <TableCell colName="Number of records">
                     {player.total_records}
                 </TableCell>
             </TableRow>
@@ -97,10 +112,27 @@ export default function Players () {
     }
 
     return <>
+        {showModal === 'playerFilter' ?
+        <SortModal setShowModal={setShowModal}
+                        sortParams={sortParams}
+                        sortOptions={[
+                        {name: 'Player name', sort: 'player_name'},
+                        {name: 'Courses completed', sort: 'completed_courses'},
+                        {name: 'Avg rank', sort: 'avg_position'},
+                        {name: 'Number of records', sort: 'total_records'}
+                    ]}
+                    name="playerFilter"/>
+        : ''}
         <H1>Players</H1>
         <Content className="gap-[3.2%]">
-            <TableContainer className="h-full">
-                <Search searchParams={searchParams} id="player-search"/>
+            <TableContainer className="h-full mb-[2rem] xl:mb-0">
+                {isMobile ?
+                <div className="flex gap-[1rem] mb-[1.5rem]">
+                    <Search searchParams={searchParams} id="player-search" className="mb-0!"/>
+                    <SortButton setShowModal={() => setShowModal('playerFilter')} />
+                </div>
+                : 
+                <Search searchParams={searchParams} id="player-search"/>}
                 <Table>
                     <THead>
                         <TableRow>
@@ -126,8 +158,8 @@ export default function Players () {
                 </Table>
                 <Pager pagerParams={isPending || error ? {page: 1, maxItems: 1} : pagerParams}/>
             </TableContainer>
-            <Content className="flex-col max-w-[39.8%] min-w-[39.8%]">
-                <PlayerDetailsTable />
+            <Content className="xl:max-w-[39.8%] xl:min-w-[39.8%] flex-col!">
+                <PlayerDetailsTable ref={ref} isMobile={isMobile} showModal={showModal} setShowModal={setShowModal}/>
             </Content>
         </Content>
     </>

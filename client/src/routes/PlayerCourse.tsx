@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from "react-router";
+import { useLocation, useOutletContext, useParams } from "react-router";
 import { toTime, toDate, toTitle } from '../helpers/convert';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import TableHeading from '../components/stylePresets/TableHeading';
 import TableCell from '../components/stylePresets/TableCell';
 import LoadingMsg from '../components/LoadingMsg';
@@ -10,6 +10,9 @@ import TableRow from '../components/stylePresets/TableRow';
 import Pager from '../components/Pager';
 import { Content, H1, H2, Link, PlayerImg, Table, TableContainer, TBody, THead } from '../components/stylePresets/presetStyles';
 import Graph from '../components/Graph';
+import { useIsMobile } from '../helpers/hooks';
+import SortButton from '../components/SortButton';
+import SortModal from '../components/SortModal';
 
 interface PlayerCourse {
     leaderboard_position: number;
@@ -53,7 +56,7 @@ interface HoverContent extends HoverData {
     y: number;
 }
 
-const PlayerCourseTable = ({ player_id, course_id, total_completions }: { player_id: string, course_id: number, total_completions: number }) => {
+const PlayerCourseTable = ({ player_id, course_id, total_completions, isMobile, showModal, setShowModal }: { player_id: string, course_id: number, total_completions: number, isMobile: boolean, showModal: string | false, setShowModal: Function }) => {
     const queryClient = useQueryClient();
 
     const [sort, setSort] = useState('time');
@@ -68,13 +71,13 @@ const PlayerCourseTable = ({ player_id, course_id, total_completions }: { player
     const loadCourses = (data: PlayerCourseTimes[]) => {
         return data.map((playerCourseTime: PlayerCourseTimes) => {
             return <TableRow key={playerCourseTime.time_id}>
-                <TableCell>
+                <TableCell colName="Time" className={isMobile ? 'bg-[#333333]' : ''}>
                     {toTime(playerCourseTime.time)}
                 </TableCell>
-                <TableCell>
+                <TableCell colName="Deaths">
                     {playerCourseTime.deaths}
                 </TableCell>
-                <TableCell>
+                <TableCell colName="Date">
                     {toDate(playerCourseTime.time_achieved)}
                 </TableCell>
             </TableRow>
@@ -100,6 +103,16 @@ const PlayerCourseTable = ({ player_id, course_id, total_completions }: { player
     }
 
     return <>
+        {showModal === 'playerCourseFilter' ?
+        <SortModal setShowModal={setShowModal}
+                        sortParams={sortParams}
+                        sortOptions={[
+                        {name: 'Time', sort: 'time'},
+                        {name: 'Deaths', sort: 'deaths'},
+                        {name: 'Date', sort: 'time_achieved'}
+                    ]}
+                    name="playerCourseFilter"/>
+        : ''}
         <Table>
             <THead>
                 <TableRow>
@@ -127,14 +140,21 @@ const PlayerCourseTable = ({ player_id, course_id, total_completions }: { player
 }
 
 export default function PlayerCourse () {
+    const isMobile = useIsMobile();
     const { player_id, course_id } = useParams();
+    const scrollUp = useLocation().state?.scrollUp;
 
     const [hoverContent, setHoverContent]: [hoverContent: undefined | HoverContent, setHoverContent: Function] = useState();
+    const {showModal, setShowModal} = useOutletContext<{showModal: string | false, setShowModal: Function}>();
 
     const { data, isPending, error } = useQuery({
         queryKey: [`PlayerCourse${player_id}_${course_id}`],
         queryFn: (): Promise<PlayerCourse> => fetch(`${import.meta.env.VITE_API_URL}/playercourse/${player_id}/${course_id}`).then(r => r.json())
     });
+
+    useEffect(() => {
+        scrollUp ? window.scrollTo(0, 0) : '';
+    }, [scrollUp]);
 
     const isLoaded = !isPending && !error;
 
@@ -156,11 +176,11 @@ export default function PlayerCourse () {
     return <>
         <H1>Player Stats by Course</H1>
         <Content className="gap-[3.2%]">
-            <TableContainer className="w-1/2">
+            <TableContainer className="h-full mb-[2rem] xl:mb-0">
                 <H2>Personal Best Progression</H2>
                 <Graph graphParams={graphParams} isPending={isPending} error={error}/>
             </TableContainer>
-            <div className="flex flex-col flex-[1_1_auto] overflow-hidden max-w-[39.8%] min-w-[39.8%]">
+            <div className="flex flex-[1_1_auto] overflow-hidden xl:max-w-[39.8%] xl:min-w-[39.8%] flex-col!">
                 <H2>
                     <Link className="inline cursor-pointer" to={`/players?playerId=${player_id}`}><PlayerImg player_id={isLoaded ? data.player_id : undefined} player_name={isLoaded ? data.player_name : ''} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.375rem]"/>{isLoaded ? data.player_name : '[Player name]'}</Link> on <Link className="inline cursor-pointer" to={`/courses/${course_id}`}>{isLoaded ? toTitle(data.course_name) : '[Course name]'}</Link>
                 </H2>
@@ -176,20 +196,22 @@ export default function PlayerCourse () {
                                     <tr>
                                         <td className="font-bold">Fastest time:</td>
                                         <td>–</td>
-                                        <td>–</td>
                                     </tr>
                                     <tr>
                                         <td className="font-bold">Average time:</td>
-                                        <td>–</td>
                                         <td>–</td>
                                     </tr>
                                     <tr>
                                         <td className="pb-[1rem] font-bold">First time:</td>
                                         <td className="pb-[1rem]">–</td>
-                                        <td className="pb-[1rem]">–</td>
                                     </tr>
                                 </tbody>
                             </table>
+                            {isMobile ?
+                                <div className="flex gap-[1rem] mb-[1.5rem]">
+                                    <SortButton />
+                                </div>
+                            : ''}
                             <Table>
                                 <THead>
                                     <TableRow>
@@ -224,22 +246,24 @@ export default function PlayerCourse () {
                                     </tr>
                                     <tr>
                                         <td className="font-bold">Fastest time:</td>
-                                        <td>{toTime(data.fastest_time)}</td>
-                                        <td>({data.fastest_deaths} deaths)</td>
+                                        <td>{toTime(data.fastest_time)} ({data.fastest_deaths} deaths)</td>
                                     </tr>
                                     <tr>
                                         <td className="font-bold">Average time:</td>
-                                        <td>{toTime(data.avg_time)}</td>
-                                        <td>({Number(data.avg_deaths).toFixed(1)} deaths)</td>
+                                        <td>{toTime(data.avg_time)} ({Number(data.avg_deaths).toFixed(1)} deaths)</td>
                                     </tr>
                                     <tr>
                                         <td className="pb-[1rem] font-bold">First time:</td>
-                                        <td className="pb-[1rem]">{toTime(data.first_time)}</td>
-                                        <td className="pb-[1rem]">({data.first_deaths} deaths)</td>
+                                        <td className="pb-[1rem]">{toTime(data.first_time)} ({data.first_deaths} deaths)</td>
                                     </tr>
                                 </tbody>
                             </table>
-                            {player_id && course_id ? <PlayerCourseTable player_id={player_id} course_id={Number(course_id)} total_completions={data.total_completions}/> : ''}
+                            {isMobile ?
+                                <div className="flex gap-[1rem] mb-[1.5rem]">
+                                    <SortButton setShowModal={() => setShowModal('playerCourseFilter')} />
+                                </div>
+                            : ''}
+                            {player_id && course_id ? <PlayerCourseTable player_id={player_id} course_id={Number(course_id)} total_completions={data.total_completions} isMobile={isMobile} showModal={showModal} setShowModal={setShowModal}/> : ''}
                         </>
                     }
                 </TableContainer>

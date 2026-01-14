@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useOutletContext, useParams } from "react-router";
 import { toDate, toTime, toTitle } from '../helpers/convert';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import TableHeading from '../components/stylePresets/TableHeading';
 import TableCell from '../components/stylePresets/TableCell';
 import Search from '../components/Search';
@@ -12,6 +12,9 @@ import Pager from '../components/Pager';
 import { Content, H1, PlayerImg, Table, TableContainer, TBody, THead, Link, H2 } from '../components/stylePresets/presetStyles';
 import Graph from '../components/Graph';
 import PlaceholderCourseTable from '../components/PlaceholderCourseTable';
+import { useIsMobile } from '../helpers/hooks';
+import SortModal from '../components/SortModal';
+import SortButton from '../components/SortButton';
 
 interface Course {
     course_name: string;
@@ -55,6 +58,7 @@ interface CourseTimes {
 }
 
 const CourseDetailsTable = ({ id }: { id: number }) => {
+    const isMobile = useIsMobile();
     const queryClient = useQueryClient();
 
     const [sort, setSort] = useState('rank');
@@ -62,6 +66,7 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
     const [direction, setDirection] = useState('ASC');
     const [page, setPage] = useState(1);
     const [fetchTimeout, setFetchTimeout] = useState(0);
+    const {showModal, setShowModal} = useOutletContext<{showModal: string | false, setShowModal: Function}>();
 
     const { data, isPending, error } = useQuery({
         queryKey: [`CourseDetailsCompletions${id}`],
@@ -78,17 +83,19 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
         }
         return data.map((courseTime: CourseTime) => {
             return <TableRow key={courseTime.player_id} route={`/players/${courseTime.player_id}/${id}`} className="cursor-pointer">
-                <TableCell>
+                <TableCell colName="Rank" className={isMobile ? 'bg-[#333333]' : ''}>
                     {courseTime.rank}
                 </TableCell>
-                <TableCell>
-                    <PlayerImg player_id={courseTime.player_id} player_name={courseTime.player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
-                    {courseTime.player_name}
+                <TableCell colName="Player name">
+                    <div>
+                        <PlayerImg player_id={courseTime.player_id} player_name={courseTime.player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
+                        {courseTime.player_name}
+                    </div>
                 </TableCell>
-                <TableCell>
+                <TableCell colName="Time">
                     {toTime(courseTime.time)}
                 </TableCell>
-                <TableCell>
+                <TableCell colName="Deaths">
                     {courseTime.deaths}
                 </TableCell>
             </TableRow>
@@ -125,7 +132,24 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
     }
 
     return <>
-        <Search searchParams={searchParams} id="course-player-search"/>
+        {showModal === 'courseDetailFilter' ?
+            <SortModal setShowModal={setShowModal}
+                         sortParams={sortParams}
+                         sortOptions={[
+                            {name: 'Rank', sort: 'rank'},
+                            {name: 'Player name', sort: 'player_name'},
+                            {name: 'Time', sort: 'time'},
+                            {name: 'Deaths', sort: 'deaths'}
+                         ]}
+                         name="courseDetailFilter"/>
+        : ''}
+        {isMobile ?
+        <div className="flex gap-[1rem] mb-[1.5rem]">
+            <Search searchParams={searchParams} id="course-player-search" className="mb-0!"/>
+            <SortButton setShowModal={() => setShowModal('courseDetailFilter')} />
+        </div>
+        : 
+        <Search searchParams={searchParams} id="course-player-search"/>}
         <Table>
             <THead>
                 <TableRow>
@@ -133,7 +157,7 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
                         Rank
                     </TableHeading>
                     <TableHeading sortParams={{...sortParams, newSort: 'player_name'}}>
-                        Player Name
+                        Player name
                     </TableHeading>
                     <TableHeading sortParams={{...sortParams, newSort: 'time'}}>
                         Time
@@ -158,6 +182,9 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
 export default function CourseDetails () {
     const navigate = useNavigate();
     const { id } = useParams();
+    const ref = useRef<HTMLHeadingElement | null>(null);
+    const scrollDown = useLocation().state?.scrollDown;
+    const scrollUp = useLocation().state?.scrollUp;
 
     const [hoverContent, setHoverContent]: [hoverContent: undefined | HoverContent, setHoverContent: Function] = useState();
 
@@ -165,6 +192,11 @@ export default function CourseDetails () {
         queryKey: [`CourseDetails${id}`],
         queryFn: (): Promise<Course> => fetch(`${import.meta.env.VITE_API_URL}/courses/${id}`).then(r => r.json())
     });
+
+    useEffect(() => {
+        scrollDown ? ref.current?.scrollIntoView() : '';
+        scrollUp ? window.scrollTo(0, 0) : '';
+    }, [scrollDown, scrollUp]);
 
     const isLoaded = !isPending && !error;
 
@@ -188,12 +220,12 @@ export default function CourseDetails () {
     return <>
         <H1>Course Stats</H1>
         <Content className="gap-[3.2%]">
-            <TableContainer>
+            <TableContainer className="h-full mb-[2rem] xl:mb-0">
                 <H2>Record Progression</H2>
                 <Graph graphParams={graphParams} isPending={isPending} error={error}/>
             </TableContainer>
-            <div className="flex flex-col flex-[1_1_auto] overflow-hidden max-w-[39.8%] min-w-[39.8%]">
-                <H2>{isLoaded ? toTitle(data.course_name) : '[Course name]'}</H2>
+            <div className="flex flex-[1_1_auto] overflow-hidden xl:max-w-[39.8%] xl:min-w-[39.8%] flex-col!">
+                <H2 ref={ref}>{isLoaded ? toTitle(data.course_name) : '[Course name]'}</H2>
                 <TableContainer>
                     {!isLoaded ? <PlaceholderCourseTable /> :
                         <table className="mb-[.5rem]">
@@ -231,13 +263,11 @@ export default function CourseDetails () {
                                 </tr>
                                 <tr>
                                     <td className="font-semibold">Fastest time:</td>
-                                    <td>{data.total_completions ? toTime(data.fastest_time) : '00:00:00.000'}</td>
-                                    <td>({data.total_completions ? data.fastest_deaths : '–'} deaths)</td>
+                                    <td>{data.total_completions ? toTime(data.fastest_time) : '00:00:00.000'} ({data.total_completions ? data.fastest_deaths : '–'} deaths)</td>
                                 </tr>
                                 <tr>
                                     <td className="font-semibold pb-[1rem]">Average first time:</td>
-                                    <td className="pb-[1rem]">{data.total_completions ? toTime(data.avg_first_time) : '00:00:00.000'}</td>
-                                    <td className="pb-[1rem]">({data.total_completions ? Number(data.avg_first_deaths).toFixed(1) : '–'} deaths)</td>
+                                    <td className="pb-[1rem]">{data.total_completions ? toTime(data.avg_first_time) : '00:00:00.000'} ({data.total_completions ? Number(data.avg_first_deaths).toFixed(1) : '–'} deaths)</td>
                                 </tr>
                             </tbody>
                         </table>

@@ -17,9 +17,9 @@ export default function HomeTable ({ data, type }: { data: Data[], type: string}
         data = data.filter((item) => item.course_id !== null);
 
         return data.map((item) => {
-            return <TableRow key={item.course_id} route={`/courses/${item.course_id}`} className="cursor-pointer">
-                    <TableCell>{toTitle(item.course_name)}</TableCell>
-                    <TableCell>{toDate(item.course_created)}</TableCell>
+            return <TableRow responsive={false} key={item.course_id} route={`/courses/${item.course_id}`} className="cursor-pointer" scrollDown={true}>
+                    <TableCell responsive={false}>{toTitle(item.course_name)}</TableCell>
+                    <TableCell responsive={false}>{toDate(item.course_created)}</TableCell>
                 </TableRow>
         })
     }
@@ -27,12 +27,12 @@ export default function HomeTable ({ data, type }: { data: Data[], type: string}
         data = data.filter((item) => item.player_id !== null);
 
         return data.map((item) => {
-            return <TableRow key={item.player_id} route={`/players?playerId=${item.player_id}`} className="cursor-pointer">
-                    <TableCell>
+            return <TableRow responsive={false} key={item.player_id} route={`/players?playerId=${item.player_id}`} className="cursor-pointer" scrollDown={true}>
+                    <TableCell responsive={false}>
                         <PlayerImg player_id={item.player_id} player_name={item.player_name} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
                         {item.player_name}
                     </TableCell>
-                    <TableCell>{item.completed_courses}</TableCell>
+                    <TableCell responsive={false}>{item.completed_courses}</TableCell>
                 </TableRow>
         })
     }

@@ -1,6 +1,6 @@
 import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
-import { useLocation } from "react-router";
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useOutletContext } from "react-router";
 import { toDate, toTime, toTitle } from '../helpers/convert';
 import TableHeading from '../components/stylePresets/TableHeading';
 import TableCell from '../components/stylePresets/TableCell';
@@ -11,6 +11,9 @@ import TableRow from '../components/stylePresets/TableRow';
 import Pager from '../components/Pager';
 import { Content, H1, H2, PlayerImg, Table, TableContainer, TBody, THead } from '../components/stylePresets/presetStyles';
 import PlaceholderCourseTable from '../components/PlaceholderCourseTable';
+import { useIsMobile } from '../helpers/hooks';
+import SortModal from '../components/SortModal';
+import SortButton from '../components/SortButton';
 
 interface Course {
     course_id: number;
@@ -30,6 +33,10 @@ interface Courses {
 export default function Courses () {
     const queryClient = useQueryClient();
     const showRecent = useLocation().state?.showRecent;
+    const {showModal, setShowModal} = useOutletContext<{showModal: string | false, setShowModal: Function}>();
+    const isMobile = useIsMobile();
+    const ref = useRef<HTMLHeadingElement | null>(null);
+    const scrollUp = useLocation().state?.scrollUp;
 
     const [sort, setSort] = useState(showRecent === true ? 'course_created' : 'course_name');
     const [search, setSearch] = useState('');
@@ -42,6 +49,10 @@ export default function Courses () {
         queryFn: (): Promise<Courses> => fetch(`${import.meta.env.VITE_API_URL}/courses?sort=${sort}&search=${search}&direction=${direction}&page=${page}`).then(r => r.json())
     });
 
+    useEffect(() => {
+        scrollUp ? window.scrollTo(0, 0) : '';
+    }, [scrollUp]);
+
     const loadCourses = (data: Course[]) => {
         if (data.length === 0) {
             return <TableRow>
@@ -51,22 +62,24 @@ export default function Courses () {
             </TableRow>
         }
         return data.map((course: Course) => {
-            return <TableRow key={course.course_id} route={`/courses/${course.course_id}`} className="cursor-pointer">
-                <TableCell>
+            return <TableRow key={course.course_id} route={`/courses/${course.course_id}`} className="cursor-pointer" scrollTo={ref}>
+                <TableCell colName="Course name" className={isMobile ? 'bg-[#333333]' : ''}>
                     {toTitle(course.course_name)}
                 </TableCell>
-                <TableCell>
+                <TableCell colName="Date added">
                     {toDate(course.course_created)}
                 </TableCell>
-                <TableCell>
+                <TableCell colName="Avg 1st time">
                     {toTime(course.avg_time)}
                 </TableCell>
-                <TableCell>
+                <TableCell colName="Fastest time">
                     {toTime(course.fastest_time)}
                 </TableCell>
-                <TableCell>
-                    <PlayerImg player_id={course.fastest_player_id || undefined} player_name={course.fastest_player_name || ''} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
-                    {course.fastest_player_name || '–'}
+                <TableCell colName="Fastest player">
+                    <div>
+                        <PlayerImg player_id={course.fastest_player_id || undefined} player_name={course.fastest_player_name || ''} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
+                        {course.fastest_player_name || '–'}
+                    </div>
                 </TableCell>
             </TableRow>
         });
@@ -102,10 +115,28 @@ export default function Courses () {
     }
 
     return <>
+        {showModal === 'courseFilter' ?
+        <SortModal setShowModal={setShowModal}
+                     sortParams={sortParams}
+                     sortOptions={[
+                        {name: 'Course name', sort: 'course_name'},
+                        {name: 'Date added', sort: 'course_created'},
+                        {name: 'Avg 1st time', sort: 'avg_time'},
+                        {name: 'Fastest time', sort: 'fastest_time'},
+                        {name: 'Fastest player', sort: 'fastest_player_name'}
+                    ]}
+                    name="courseFilter"/>
+        : ''}
         <H1>Courses</H1>
         <Content className="gap-[3.2%]">
-            <TableContainer>
-                <Search searchParams={searchParams} id="course-search"/>
+            <TableContainer className="h-full mb-[2rem] xl:mb-0">
+                {isMobile ?
+                <div className="flex gap-[1rem] mb-[1.5rem]">
+                    <Search searchParams={searchParams} id="course-search" className="mb-0!"/>
+                    <SortButton setShowModal={() => setShowModal('courseFilter')} />
+                </div>
+                : 
+                <Search searchParams={searchParams} id="course-search"/>}
                 <Table>
                     <THead>
                         <TableRow>
@@ -134,12 +165,18 @@ export default function Courses () {
                 </Table>
                 <Pager pagerParams={isPending || error ? {page: 1, maxItems: 1} : pagerParams}/>
             </TableContainer>
-            <div className="flex flex-col flex-[1_1_auto] overflow-hidden max-w-[39.8%] min-w-[39.8%]">
-                <H2>[Course name]</H2>
+            <div className="flex flex-[1_1_auto] overflow-hidden xl:max-w-[39.8%] xl:min-w-[39.8%] flex-col!">
+                <H2 ref={ref}>[Course name]</H2>
                 <TableContainer>
                     <PlaceholderCourseTable />
-                    <Content className="flex-col">
-                        <Search id="" />
+                    <Content className="flex-col!">
+                        {isMobile ?
+                            <div className="flex gap-[1rem] mb-[1.5rem]">
+                                <Search id="" className="mb-0!"/>
+                                <SortButton/>
+                            </div>
+                            : 
+                            <Search id=""/>}
                         <Table>
                             <THead>
                                 <TableRow>

@@ -23,12 +23,14 @@ export const toDate = (date: string) => {
         "Dec"
     ]
 
-    const year = date.substring(0, 4);
+    const updatedDate = new Date(Date.parse(date)).toISOString();
+
+    const year = updatedDate.substring(0, 4);
     const month = monthNames.filter((month: string, index: number) => {
-        if (date.substring(5,7) === String(index + 1).padStart(2, '0')) return month;
+        if (updatedDate.substring(5,7) === String(index + 1).padStart(2, '0')) return month;
         return false;
     })[0];
-    const day = parseInt(date.substring(8,10));
+    const day = parseInt(updatedDate.substring(8,10));
 
     return `${month} ${day}, ${year}`;
 }

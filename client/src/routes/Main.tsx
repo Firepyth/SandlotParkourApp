@@ -5,12 +5,20 @@ import ErrorMsg from '../components/ErrorMsg';
 import LoadingMsg from '../components/LoadingMsg';
 import TableRow from '../components/stylePresets/TableRow';
 import { H1, H2, Table, TableContainer, TBody, THead, Link } from '../components/stylePresets/presetStyles';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router';
 
 export default function Main () {
+    const scrollUp = useLocation().state?.scrollUp;
+
     const { data, isPending, error } = useQuery({
         queryKey: ['Main'],
         queryFn: () => fetch(`${import.meta.env.VITE_API_URL}/playercourse/recent`).then(r => r.json())
     });
+
+    useEffect(() => {
+        scrollUp ? window.scrollTo(0, 0) : '';
+    }, [scrollUp]);
 
     return <>
         <H1><strong>The&nbsp;Sandlot</strong> Parkour&nbsp;Rankings</H1>
@@ -22,17 +30,17 @@ export default function Main () {
 				<p className="mb-[.75em]">The&nbsp;Sandlot features a number of mini-games players can enjoy, including parkour.</p>
                 <p className="mt-[1.5rem] uppercase text-[.75em]/[1em] tracking-[.1em]"><a href="https://www.sandlotminecraft.com/pages/about/" target="_blank" className="text-[#ff8066]"><span className="underline">Learn more about The&nbsp;Sandlot</span> <i className="fa-solid fa-arrow-up-right-from-square"></i></a></p>
             </div>
-            <div className="md:flex md:gap-[3.2%] xl:gap-[5%] w-full xl:w-2/3">
-                <TableContainer className="w-full mb-[2rem] md:mb-0">
+            <div className="w-full lg:flex lg:gap-[3.2%] xl:gap-[5%] xl:w-2/3">
+                <TableContainer className="w-full mb-[2rem] lg:mb-0">
                     <H2>Top players</H2>
-                    <Table>
-                        <THead>
-                            <TableRow>
+                    <Table className="max-h-none! min-h-auto!">
+                        <THead responsive={false}>
+                            <TableRow responsive={false}>
                                 <TableHeading>
                                     Player name
                                 </TableHeading>
                                 <TableHeading>
-                                    Courses
+                                    Courses completed
                                 </TableHeading>
                             </TableRow>
                         </THead>
@@ -42,13 +50,13 @@ export default function Main () {
                             }
                         </TBody>
                     </Table>
-                    <Link className="mt-[1.5rem] uppercase text-[.75em]/[1em] tracking-[.1em]" to="/players" state={{showTop: true}}>View more</Link>
+                    <Link className="mt-[1.5rem] uppercase text-[.75em]/[1em] tracking-[.1em]" to="/players" state={{showTop: true}} onClick={() => window.scrollTo(0, 0)}>View more</Link>
                 </TableContainer>
                 <TableContainer className="w-full">
                     <H2>Recent courses</H2>
-                    <Table>
-                        <THead>
-                            <TableRow>
+                    <Table className="max-h-none! min-h-auto!">
+                        <THead responsive={false}>
+                            <TableRow responsive={false}>
                                 <TableHeading>
                                     Course name
                                 </TableHeading>
@@ -63,7 +71,7 @@ export default function Main () {
                             }
                         </TBody>
                     </Table>
-                    <Link className="mt-[1.5rem] uppercase text-[.75em]/[1em] tracking-[.1em]" to="/courses" state={{showRecent: true}}>View more</Link>
+                    <Link className="mt-[1.5rem] uppercase text-[.75em]/[1em] tracking-[.1em]" to="/courses" state={{showRecent: true}} onClick={() => window.scrollTo(0, 0)}>View more</Link>
                 </TableContainer>
             </div>
         </div>

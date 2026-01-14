@@ -163,6 +163,7 @@
 @import "tailwindcss";
 
 @theme {
+    --breakpoint-xs: 24rem;
     --font-minecraft: Minecraft, "sans-serif";
     --font-rubik: Rubik, "sans-serif";
     --font-asap: "Asap Condensed", "sans-serif";

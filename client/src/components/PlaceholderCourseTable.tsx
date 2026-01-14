@@ -21,13 +21,11 @@ export default function PlaceholderCourseTable () {
             </tr>
             <tr>
                 <td className="font-semibold">Fastest time:</td>
-                <td>00:00:00.000</td>
-                <td>(– deaths)</td>
+                <td>00:00:00.000 (– deaths)</td>
             </tr>
             <tr>
                 <td className="font-semibold pb-[1rem]">Average first time:</td>
-                <td className="pb-[1rem]">00:00:00.000</td>
-                <td className="pb-[1rem]">(– deaths)</td>
+                <td className="pb-[1rem]">00:00:00.000 (– deaths)</td>
             </tr>
         </tbody>
     </table>

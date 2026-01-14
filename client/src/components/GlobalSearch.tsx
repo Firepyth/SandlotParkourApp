@@ -16,7 +16,7 @@ interface SearchResult {
     player_name: string | null;
 }
 
-export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Function}) {
+export default function GlobalSearch ({ setShowModal }: {setShowModal: Function}) {
     const [search, setSearch] = useState('');
     const [fetchTimeout, setFetchTimeout] = useState(0);
     const queryClient = useQueryClient();
@@ -38,8 +38,8 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
     });
 
     const loadCourses = (data: SearchResult[]) => {
-        const noResult = <TableRow>
-                <TableCell>
+        const noResult = <TableRow responsive={false}>
+                <TableCell responsive={false}>
                     No courses found
                 </TableCell>
             </TableRow>;
@@ -50,8 +50,8 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
 
         const rows = data.map((item: SearchResult) => {
             if (item.course_id === null) return;
-            return <TableRow route={`/courses/${item.course_id}`} className="cursor-pointer" setShowSearch={setShowSearch} key={item.course_id}>
-                <TableCell>
+            return <TableRow responsive={false} route={`/courses/${item.course_id}`} className="cursor-pointer" setShowModal={setShowModal} key={item.course_id}>
+                <TableCell responsive={false}>
                     {toTitle(item.course_name || '')}
                 </TableCell>
             </TableRow>
@@ -65,8 +65,8 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
     }
 
     const loadPlayers = (data: SearchResult[]) => {
-        const noResult = <TableRow>
-                <TableCell>
+        const noResult = <TableRow responsive={false}>
+                <TableCell responsive={false}>
                     No players found
                 </TableCell>
             </TableRow>;
@@ -77,8 +77,8 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
 
         const rows = data.map((item: SearchResult) => {
             if (item.player_id === null) return;
-            return <TableRow route={`/players?playerId=${item.player_id}`} className="cursor-pointer" setShowSearch={setShowSearch} key={item.player_id}>
-                <TableCell>
+            return <TableRow responsive={false} route={`/players?playerId=${item.player_id}`} className="cursor-pointer" setShowModal={setShowModal} key={item.player_id}>
+                <TableCell responsive={false}>
                     <PlayerImg player_id={item.player_id || ''} player_name={item.player_name || ''} className="inline-block w-[1.5rem] h-[1.5rem] mt-[-.25rem]"/>
                     {item.player_name}
                 </TableCell>
@@ -92,15 +92,15 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
         return rows;
     }
 
-    return <TableContainer className="absolute left-0 right-0 w-[calc(100vw_-_2rem)] max-w-[20rem] top-20 mx-auto z-1 shadow-[0_0_0_max(100vh,_100vw)_rgba(0,_0,_0,_.5)] sm:w-[28rem] sm:max-w-[28rem]" onClick={(e: Event) => e.stopPropagation()}>
+    return <TableContainer className="fixed left-0 right-0 w-[calc(100vw_-_2rem)] max-w-[20rem] top-20 mx-auto z-1 shadow-[0_0_0_max(1000rem,_100vw)_rgba(0,_0,_0,_.5)] sm:w-[28rem] sm:max-w-[28rem]" onClick={(e: Event) => e.stopPropagation()}>
         <div className="flex gap-[1rem] mb-[1.5rem]">
             <Search searchParams={searchParams} autofocus={true} id="global-search" className="w-full mb-0!"/>
-            <button className="my-auto cursor-pointer bg-[#8b8b8b] text-[#232323] rounded-full min-w-[1.75rem] min-h-[1.75rem] hover:bg-[#999999] flex items-center justify-center" onClick={() => setShowSearch(false)}><i className="fa-solid fa-x"></i></button>
+            <button className="my-auto cursor-pointer bg-[#8b8b8b] text-[#232323] rounded-full min-w-[1.75rem] min-h-[1.75rem] hover:bg-[#999999] flex items-center justify-center" onClick={() => setShowModal(false)}><i className="fa-solid fa-x"></i></button>
         </div>
         <div className="flex flex-col gap-[2rem] sm:flex-row sm:gap-[1rem]">
             <Table className="w-full h-[8.9375rem] max-h-none! min-h-auto!" strictHeight={true}>
-                <THead>
-                    <TableRow>
+                <THead responsive={false}>
+                    <TableRow responsive={false}>
                         <TableHeading>
                             Player name
                         </TableHeading>
@@ -111,8 +111,8 @@ export default function GlobalSearch ({ setShowSearch }: {setShowSearch: Functio
                 </TBody>
             </Table>
             <Table className="w-full h-[8.9375rem] max-h-none! min-h-auto!" strictHeight={true}>
-                <THead>
-                    <TableRow>
+                <THead responsive={false}>
+                    <TableRow responsive={false}>
                         <TableHeading>
                             Course name
                         </TableHeading>
