@@ -92,13 +92,11 @@ export default function GlobalSearch ({ setShowModal }: {setShowModal: Function}
         return rows;
     }
 
-    return <TableContainer className="fixed left-0 right-0 w-[calc(100vw_-_2rem)] max-w-[20rem] top-20 mx-auto z-1 shadow-[0_0_0_max(1000rem,_100vw)_rgba(0,_0,_0,_.5)] sm:w-[28rem] sm:max-w-[28rem]" onClick={(e: Event) => e.stopPropagation()}>
-        <div className="flex gap-[1rem] mb-[1.5rem]">
-            <Search searchParams={searchParams} autofocus={true} id="global-search" className="w-full mb-0!"/>
-            <button className="my-auto cursor-pointer bg-[#8b8b8b] text-[#232323] rounded-full min-w-[1.75rem] min-h-[1.75rem] hover:bg-[#999999] flex items-center justify-center" onClick={() => setShowModal(false)}><i className="fa-solid fa-x"></i></button>
-        </div>
+    return <TableContainer className="fixed left-0 right-0 w-[calc(100vw_-_2rem)] max-w-[20rem] top-20 mx-auto z-1 shadow-[0_0_0_max(1000rem,_100vw)_rgba(0,_0,_0,_.5)] sm:w-[28rem] sm:max-w-[28rem] overflow-visible!" onClick={(e: Event) => e.stopPropagation()}>
+            <button className="absolute top-[-.75rem] right-[-.75rem] cursor-pointer bg-[#8b8b8b] text-[#232323] rounded-full min-w-[1.75rem] min-h-[1.75rem] hover:bg-[#999999] flex items-center justify-center" onClick={() => setShowModal(false)}><i className="fa-solid fa-xmark"></i></button>
+        <Search searchParams={searchParams} autofocus={true} id="global-search"/>
         <div className="flex flex-col gap-[2rem] sm:flex-row sm:gap-[1rem]">
-            <Table className="w-full h-[8.9375rem] max-h-none! min-h-auto!" strictHeight={true}>
+            <Table className="w-full h-[8.9375rem] max-h-none! min-h-auto! overflow-hidden!" strictHeight={true}>
                 <THead responsive={false}>
                     <TableRow responsive={false}>
                         <TableHeading>
@@ -110,7 +108,7 @@ export default function GlobalSearch ({ setShowModal }: {setShowModal: Function}
                     {isPending ? <LoadingMsg /> : error ? <ErrorMsg /> : loadPlayers(data)}
                 </TBody>
             </Table>
-            <Table className="w-full h-[8.9375rem] max-h-none! min-h-auto!" strictHeight={true}>
+            <Table className="w-full h-[8.9375rem] max-h-none! min-h-auto! overflow-hidden!" strictHeight={true}>
                 <THead responsive={false}>
                     <TableRow responsive={false}>
                         <TableHeading>
