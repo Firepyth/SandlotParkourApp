@@ -35,7 +35,7 @@ export default function Main () {
                     <H2>Top players</H2>
                     <Table className="max-h-none! min-h-auto!">
                         <THead responsive={false}>
-                            <TableRow responsive={false}>
+                            <TableRow responsive={false} isTabbable={false}>
                                 <TableHeading>
                                     Player name
                                 </TableHeading>
@@ -56,7 +56,7 @@ export default function Main () {
                     <H2>Recent courses</H2>
                     <Table className="max-h-none! min-h-auto!">
                         <THead responsive={false}>
-                            <TableRow responsive={false}>
+                            <TableRow responsive={false} isTabbable={false}>
                                 <TableHeading>
                                     Course name
                                 </TableHeading>

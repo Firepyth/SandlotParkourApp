@@ -6,7 +6,7 @@ export const H1 = ({children, className = ''}: {children: React.ReactNode, class
 }
 
 export const H2 = ({children, className = '', ref}: {children: React.ReactNode, className?: string, ref?: React.RefObject<HTMLHeadingElement | null>}) => {
-    return <h2 ref={ref ? ref : undefined} className={`font-minecraft text-[1.5rem] mb-[.75em] ${className}`}>{children}</h2>
+    return <h2 ref={ref ? ref : undefined} className={`pt-[4rem] mt-[-4rem] font-minecraft text-[1.5rem] mb-[.75em] ${className}`}>{children}</h2>
 }
 
 export const TableContainer = ({children, className = '', onClick = undefined}: {children: React.ReactNode, className?: string, onClick?: Function | undefined}) => {
@@ -15,7 +15,7 @@ export const TableContainer = ({children, className = '', onClick = undefined}: 
 
 export const Table = ({children, className = '', strictHeight = false}: {children: React.ReactNode, className?: string, strictHeight?: boolean}) => {
     return <div className={`overflow-y-auto ${strictHeight ? '' : 'h-full'} flex-[1_1_auto] border-b-[2px] border-[#404040] max-h-[calc(40vh_+_10rem)] min-h-[calc(40vh_+_10rem)] xl:max-h-none xl:min-h-auto ${className}`}>
-        <table className="border-separate w-full border-spacing-0">{children}</table>
+        <table className={`border-separate w-full border-spacing-0`}>{children}</table>
     </div>
 }
 

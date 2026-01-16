@@ -115,7 +115,7 @@ const PlayerCourseTable = ({ player_id, course_id, total_completions, isMobile, 
         : ''}
         <Table>
             <THead>
-                <TableRow>
+                <TableRow isTabbable={false}>
                     <TableHeading sortParams={{...sortParams, newSort: 'time'}}>
                         Time
                     </TableHeading>
@@ -214,7 +214,7 @@ export default function PlayerCourse () {
                             : ''}
                             <Table>
                                 <THead>
-                                    <TableRow>
+                                    <TableRow isTabbable={false}>
                                         <TableHeading fakeSort={true}>
                                             Time
                                         </TableHeading>

@@ -152,7 +152,7 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
         <Search searchParams={searchParams} id="course-player-search"/>}
         <Table>
             <THead>
-                <TableRow>
+                <TableRow isTabbable={false}>
                     <TableHeading sortParams={{...sortParams, newSort: 'rank'}}>
                         Rank
                     </TableHeading>

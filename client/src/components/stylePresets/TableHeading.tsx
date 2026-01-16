@@ -30,7 +30,7 @@ export default function TableHeading ({className, children, sortParams = null, f
             {children}
         </th>
     }
-    return <th className={`cursor-pointer ${classes}`} onClick={() => handleSort(sortParams)}>
+    return <th className={`cursor-pointer ${classes}`} onClick={() => handleSort(sortParams)} onKeyDown={(e) => e.key === "Enter" ? handleSort(sortParams) : undefined} tabIndex={0}>
         {children}
         <span className="inline-block min-w-[1.5em] text-center">{sortParams.sort !== sortParams.newSort ? '–' : sortParams.direction === 'ASC' ? <i className="fa-solid fa-caret-up"></i> : <i className="fa-solid fa-caret-down"></i>}</span>
     </th>

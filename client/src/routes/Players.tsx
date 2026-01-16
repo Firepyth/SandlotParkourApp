@@ -135,7 +135,7 @@ export default function Players () {
                 <Search searchParams={searchParams} id="player-search"/>}
                 <Table>
                     <THead>
-                        <TableRow>
+                        <TableRow isTabbable={false}>
                             <TableHeading sortParams={{...sortParams, newSort: 'player_name'}} className="min-w-[24ch]">
                                 Player name
                             </TableHeading>

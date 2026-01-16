@@ -139,7 +139,7 @@ export default function Courses () {
                 <Search searchParams={searchParams} id="course-search"/>}
                 <Table>
                     <THead>
-                        <TableRow>
+                        <TableRow isTabbable={false}>
                             <TableHeading sortParams={{...sortParams, newSort: 'course_name'}}>
                                 Course name
                             </TableHeading>
@@ -179,7 +179,7 @@ export default function Courses () {
                             <Search id=""/>}
                         <Table>
                             <THead>
-                                <TableRow>
+                                <TableRow isTabbable={false}>
                                     <TableHeading fakeSort={true}>
                                         Rank
                                     </TableHeading>

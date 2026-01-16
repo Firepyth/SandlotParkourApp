@@ -38,7 +38,7 @@ export default function SortModal ({name, setShowModal, sortParams, sortOptions}
         <div className="flex flex-col gap-[1rem]">
             <button className="absolute top-[-.75rem] right-[-.75rem] cursor-pointer bg-[#8b8b8b] text-[#232323] rounded-full min-w-[1.75rem] min-h-[1.75rem] hover:bg-[#999999] flex items-center justify-center" onClick={() => setShowModal(false)}><i className="fa-solid fa-xmark"></i></button>
             <div className="relative">
-                <select name={`${name}_direction`} id={`${name}_direction`} onChange={(e) => handleDirection(sortParams, e.target.value)} defaultValue={sortParams.direction}
+                <select autoFocus={true} name={`${name}_direction`} id={`${name}_direction`} onChange={(e) => handleDirection(sortParams, e.target.value)} defaultValue={sortParams.direction}
                         className="appearance-none w-full">
                     <option value="ASC">Ascending</option>
                     <option value="DESC">Descending</option>
