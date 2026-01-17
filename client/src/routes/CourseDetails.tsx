@@ -77,7 +77,7 @@ const CourseDetailsTable = ({ id }: { id: number }) => {
         if (data.length === 0) {
             return <TableRow>
                 <TableCell colSpan={4}>
-                    No completions found.
+                    No players found with: {search}.
                 </TableCell>
             </TableRow>
         }

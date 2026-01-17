@@ -1,7 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { getPage, getDirection, getSort } from '../helpers/handleQueryParams.js';
-import { checkForPlayer } from '../helpers/checkID.js';
 import express from 'express';
 import json from '../helpers/json.js';
 const router = express.Router();
@@ -21,12 +20,16 @@ interface Player {
 }
 
 interface PlayerTime {
-    name: string;
-    course_id: number;
-    fastest_time: number | null;
-    deaths: number | null;
-    leaderboard_position: number | null;
-    time_id: number | null;
+    matched_courses: number;
+    player_name: string;
+    completions: {
+        course_name: string;
+        course_id: number;
+        fastest_time: number | null;
+        deaths: number | null;
+        leaderboard_position: number | null;
+        time_id: number | null;
+    }[]
 }
 
 router.get('/', async function(req, res, next) {
@@ -217,11 +220,6 @@ router.get('/:player_id', async function(req, res, next) {
 
 router.get('/completions/all/:player_id', async function(req, res, next) {
     try {
-        const player: boolean = await checkForPlayer(req.params.player_id);
-        if (player === false) {
-            return res.status(404).json({ error: `No players found with the ID ${req.params.player_id}` });
-        }
-
         let sort: string | boolean = getSort(
             [
                 "course_name",
@@ -312,8 +310,8 @@ router.get('/completions/all/:player_id', async function(req, res, next) {
             )
             ;
         `;
-        if (result.length === 0) {
-            return req.query.search ? res.status(404).json({ error: `No courses found with the search term ${req.query.search}` }) : res.status(404).json({ error: `No courses found.` });
+        if (result[0].player_name === null) {
+            return res.status(404).json({ error: `No players found with the ID ${req.params.player_id}` });
         }
         res.status(200).json(json(result[0]));
     } catch (err) {
@@ -324,11 +322,6 @@ router.get('/completions/all/:player_id', async function(req, res, next) {
 
 router.get('/completions/finished/:player_id', async function(req, res, next) {
     try {
-        const player: boolean = await checkForPlayer(req.params.player_id);
-        if (player === false) {
-            return res.status(404).json({ error: `No players found with the ID ${req.params.player_id}` });
-        }
-
         let sort: string | boolean = getSort(
             [
                 "course_name",
@@ -409,8 +402,8 @@ router.get('/completions/finished/:player_id', async function(req, res, next) {
             )
             ;
         `;
-        if (result.length === 0) {
-            return req.query.search ? res.status(404).json({ error: `No courses found with the search term ${req.query.search}` }) : res.status(404).json({ error: `No courses found.` });
+        if (result[0].player_name === null) {
+            return res.status(404).json({ error: `No players found with the ID ${req.params.player_id}` });
         }
         res.status(200).json(json(result[0]));
     } catch (err) {
@@ -421,11 +414,6 @@ router.get('/completions/finished/:player_id', async function(req, res, next) {
 
 router.get('/completions/unfinished/:player_id', async function(req, res, next) {
     try {
-        const player: boolean = await checkForPlayer(req.params.player_id);
-        if (player === false) {
-            return res.status(404).json({ error: `No players found with the ID ${req.params.player_id}` });
-        }
-
         let sort: string | boolean = getSort(
             [
                 "course_name",
@@ -493,8 +481,9 @@ router.get('/completions/unfinished/:player_id', async function(req, res, next) 
             )
             ;
         `;
-        if (result.length === 0) {
-            return req.query.search ? res.status(404).json({ error: `No courses found with the search term ${req.query.search}` }) : res.status(404).json({ error: `No courses found.` });
+        
+        if (result[0].player_name === null) {
+            return res.status(404).json({ error: `No players found with the ID ${req.params.player_id}` });
         }
         res.status(200).json(json(result[0]));
     } catch (err) {

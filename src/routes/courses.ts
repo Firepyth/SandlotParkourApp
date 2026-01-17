@@ -1,7 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { getPage, getDirection, getSort } from '../helpers/handleQueryParams.js';
-import { checkForCourse } from '../helpers/checkID.js';
 import express from 'express';
 import json from '../helpers/json.js';
 const router = express.Router();
@@ -215,11 +214,6 @@ router.get('/completions/:course_id', async function(req, res, next) {
         if (parseInt(req.params.course_id).toString() !== req.params.course_id) {
             return res.status(404).json({ error: `No courses found with the ID ${req.params.course_id}` });
         }
-        
-        const course: boolean = await checkForCourse(req.params.course_id);
-        if (course === false) {
-            return res.status(404).json({ error: `No courses found with the ID ${req.params.course_id}` });
-        }
 
         let sort: string | boolean = getSort(
             [
@@ -283,7 +277,12 @@ router.get('/completions/:course_id', async function(req, res, next) {
             ;
         `;
         if (result.length === 0) {
-            return res.status(404).json({ error: `No players found with the search term ${req.query.search}` });
+            if (req.query.search !== undefined) {
+                return res.status(404).json({ error: `No players found with the search term ${req.query.search}` });
+            }
+            else {
+                return res.status(404).json({ error: `No courses found with the ID ${req.params.course_id}` });
+            }
         }
         res.status(200).json(json(result[0]));
     } catch (err) {

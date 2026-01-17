@@ -79,7 +79,7 @@ export const PlayerDetailsTable = ({isMobile, showModal, setShowModal, ref}: {is
                 </TableCell>
             </TableRow>
         }
-        if (data.length === 0) {
+        if (data[0].course_name === null) {
             return <TableRow>
                 <TableCell colSpan={5}>
                     No results for: {search}
